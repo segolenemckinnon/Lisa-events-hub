@@ -1,0 +1,2816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LISA Events Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --ink:         #141420;
+  --ink-mid:     #52526e;
+  --ink-light:   #9898b8;
+  --page:        #f0eff8;
+  --surface:     #ffffff;
+  --border:      #e0dff0;
+  --accent:      #4f46e5;
+  --accent-h:    #3730c8;
+  --accent-soft: #eef2ff;
+  --green:       #16a34a;
+  --green-s:     #dcfce7;
+  --amber:       #d97706;
+  --amber-s:     #fef3c7;
+  --red:         #dc2626;
+  --red-s:       #fee2e2;
+  --purple:      #7c3aed;
+  --purple-s:    #ede9fe;
+  --sans:  'Inter', sans-serif;
+  --mono:  'DM Mono', monospace;
+  --r:     6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--page);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh;}
+
+/* ── SHELL ── */
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:var(--ink);flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-logo{padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08);}
+.logo-mark{font-family:var(--mono);font-size:16px;color:#fff;letter-spacing:.06em;}
+.logo-mark span{color:#818cf8;}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;margin-top:2px;}
+.nav-section{padding:14px 10px 4px;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;font-weight:500;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:5px;cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;transition:all .15s;margin:1px 6px;border:none;background:none;width:calc(100% - 12px);text-align:left;font-family:var(--sans);}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:rgba(79,70,229,.4);color:#fff;}
+.nav-item .icon{width:16px;text-align:center;flex-shrink:0;font-size:14px;}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:8px;}
+.nav-badge.amber{background:var(--amber);}
+.nav-badge.red{background:var(--red);}
+.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.25);}
+
+.main{flex:1;overflow:hidden;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:600;color:var(--ink);}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+
+.content{padding:28px;max-width:1100px;}
+
+/* ── PANELS ── */
+.panel{display:none;}.panel.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:16px;}
+.card-sm{padding:14px 16px;}
+.card-title{font-size:11px;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;}
+.stat-label{font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.stat-val{font-size:26px;font-weight:600;line-height:1;}
+.stat-sub{font-size:11px;color:var(--ink-mid);margin-top:4px;}
+
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-grid.g3{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.s2{grid-column:span 2;}.field.s3{grid-column:span 3;}
+label{font-size:12px;font-weight:500;color:var(--ink-mid);}
+label .req{color:var(--accent);}
+input[type=text],input[type=email],input[type=number],input[type=date],input[type=time],select,textarea{font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--page);border:1px solid var(--border);border-radius:4px;padding:8px 10px;outline:none;width:100%;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:#fff;}
+textarea{resize:vertical;min-height:68px;}
+
+/* ── TOGGLE CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:3px;}
+.chip{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-mid);padding:5px 10px;border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:all .12s;background:var(--page);}
+.chip:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+.chip input{accent-color:var(--accent);width:13px;height:13px;}
+
+/* ── BUTTONS ── */
+.btn{font-family:var(--sans);font-size:13px;font-weight:500;padding:8px 16px;border-radius:5px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent-h);}
+.btn-ghost{background:transparent;color:var(--ink-mid);border:1px solid var(--border);}.btn-ghost:hover{background:var(--page);color:var(--ink);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-sm{font-size:11px;padding:5px 10px;}
+.btn-row{display:flex;gap:8px;margin-top:18px;align-items:center;}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.bg{background:var(--green-s);color:var(--green);}
+.ba{background:var(--amber-s);color:var(--amber);}
+.br{background:var(--red-s);color:var(--red);}
+.bb{background:var(--accent-soft);color:var(--accent);}
+.bp{background:var(--purple-s);color:var(--purple);}
+.bk{background:#f3f4f6;color:var(--ink-mid);}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{font-size:11px;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--page);}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr.clickable{cursor:pointer;}.tbl tr.clickable:hover td{background:var(--accent-soft);}
+.tbl-name{font-weight:500;margin-bottom:2px;}
+.tbl-sub{font-size:11px;color:var(--ink-light);}
+
+/* ── PROGRESS ── */
+.prog{display:flex;align-items:center;gap:8px;}
+.prog-bar{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .4s;}
+.prog-pct{font-family:var(--mono);font-size:11px;color:var(--ink-light);width:28px;}
+
+/* ── CALENDAR ── */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cal-month{font-size:15px;font-weight:600;}
+.cal-legend{display:flex;gap:14px;flex-wrap:wrap;}
+.cal-leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-mid);}
+.cal-leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-daylabel{font-size:10px;font-weight:600;color:var(--ink-light);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:.05em;}
+.cal-day{min-height:80px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:6px;cursor:pointer;transition:border-color .15s;}
+.cal-day:hover{border-color:var(--accent);}
+.cal-day.empty{background:transparent;border-color:transparent;cursor:default;}
+.cal-day.today{border-color:var(--accent);border-width:2px;}
+.cal-daynum{font-family:var(--mono);font-size:11px;color:var(--ink-light);margin-bottom:4px;}
+.cal-day.today .cal-daynum{color:var(--accent);font-weight:700;}
+.cal-ev{font-size:10px;font-weight:500;padding:2px 5px;border-radius:3px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ev-green{background:var(--green-s);color:var(--green);}
+.ev-amber{background:var(--amber-s);color:var(--amber);}
+.ev-conflict{background:var(--red-s);color:var(--red);border:1px solid var(--red);}
+
+/* ── ROOMS ── */
+.rooms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.room-card{border:2px solid var(--border);border-radius:var(--r);padding:14px 16px;background:var(--surface);}
+.room-card.free{border-color:var(--green);}
+.room-card.taken{border-color:var(--red);background:var(--red-s);}
+.room-card.partial{border-color:var(--amber);}
+.room-name{font-weight:600;font-size:13px;margin-bottom:4px;}
+.room-cap{font-size:11px;color:var(--ink-mid);}
+.room-status{font-size:11px;font-weight:600;margin-top:8px;}
+.room-card.free .room-status{color:var(--green);}
+.room-card.taken .room-status{color:var(--red);}
+.room-card.partial .room-status{color:var(--amber);}
+.room-booking{font-size:10px;color:var(--ink-mid);margin-top:2px;}
+
+/* ── SCORE ── */
+.score-box{background:var(--accent-soft);border:1px solid #c7c7f5;border-radius:var(--r);padding:16px 18px;margin-top:16px;}
+.score-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.score-name{font-size:12px;color:var(--ink-mid);width:170px;flex-shrink:0;}
+.score-bar-wrap{flex:1;height:6px;background:#ddd8ff;border-radius:3px;overflow:hidden;}
+.score-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .35s;}
+.score-pts{font-family:var(--mono);font-size:11px;color:var(--accent);width:32px;text-align:right;}
+.score-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:8px;border-top:1px solid #c7c7f5;}
+.score-total-num{font-size:14px;font-weight:600;}
+.verdict{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;}
+
+/* ── CHECKLIST ── */
+.cl-phase{font-size:10px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em;padding:12px 0 5px;border-top:1px solid var(--border);margin-top:4px;}
+.cl-phase:first-of-type{border-top:none;padding-top:0;}
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:4px;cursor:pointer;transition:background .12s;font-size:13px;}
+.cl-item:hover{background:var(--accent-soft);}
+.cl-item.done{color:var(--ink-light);text-decoration:line-through;}
+.cl-item input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;margin-top:2px;cursor:pointer;}
+.cl-item-meta{display:flex;flex-direction:column;gap:2px;}
+.cl-item-sub{font-size:11px;color:var(--ink-light);}
+.cl-approval{display:inline-flex;align-items:center;gap:4px;font-size:10px;background:var(--amber-s);color:var(--amber);border-radius:3px;padding:1px 6px;margin-top:2px;font-weight:500;}
+
+/* ── TEAM ── */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.team-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;}
+.team-name{font-weight:600;font-size:13px;}
+.team-role{font-size:11px;color:var(--ink-mid);margin-bottom:10px;}
+.team-events{display:flex;flex-direction:column;gap:4px;}
+.team-ev-tag{font-size:11px;padding:3px 8px;border-radius:3px;background:var(--accent-soft);color:var(--accent);}
+.team-load{margin-top:8px;}
+.team-load-label{font-size:10px;color:var(--ink-light);margin-bottom:3px;}
+.load-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.load-fill{height:100%;border-radius:3px;}
+.load-low{background:var(--green);}
+.load-med{background:var(--amber);}
+.load-high{background:var(--red);}
+
+/* ── BUDGET ── */
+.budget-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.budget-row:last-child{border-bottom:none;}
+.budget-item{font-size:13px;}
+.budget-amount{font-family:var(--mono);font-size:13px;}
+.budget-status{font-size:11px;}
+.budget-summary{display:flex;gap:16px;background:var(--page);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;}
+.budget-sum-item{display:flex;flex-direction:column;gap:2px;}
+.budget-sum-label{font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;}
+.budget-sum-val{font-family:var(--mono);font-size:18px;font-weight:500;}
+
+/* ── TEMPLATES ── */
+.tmpl-tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;}
+.tmpl-tab{font-size:12px;font-weight:500;padding:5px 12px;border-radius:4px;cursor:pointer;color:var(--ink-mid);border:1px solid transparent;background:none;font-family:var(--sans);}
+.tmpl-tab.active{background:var(--accent-soft);color:var(--accent);border-color:#c7c7f5;}
+.tmpl-box{background:var(--page);border:1px solid var(--border);border-radius:4px;padding:14px 16px;font-size:13px;line-height:1.65;white-space:pre-wrap;font-family:var(--mono);color:var(--ink);}
+.tmpl-placeholder{color:var(--accent);font-style:italic;}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(20,20,32,.55);z-index:200;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:10px;width:660px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 24px 64px rgba(0,0,0,.25);}
+.modal-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-light);line-height:1;padding:0 4px;}
+.modal-close:hover{color:var(--ink);}
+
+/* ── INFO BOX ── */
+.info{display:flex;gap:8px;font-size:12px;color:var(--ink-mid);background:var(--amber-s);border:1px solid #fcd34d;border-radius:4px;padding:8px 12px;margin-bottom:14px;}
+
+/* ── DIGEST ── */
+.digest-box{background:var(--ink);color:#e0dfff;border-radius:var(--r);padding:20px 22px;font-family:var(--mono);font-size:12px;line-height:1.8;}
+.digest-hd{color:#818cf8;font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;}
+.digest-section{color:#a5b4fc;margin-top:12px;margin-bottom:4px;}
+.digest-ok{color:#86efac;}
+.digest-warn{color:#fcd34d;}
+.digest-late{color:#fca5a5;}
+
+/* ── SUCCESS STORIES ── */
+.story-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:var(--r);padding:16px 18px;margin-bottom:12px;}
+.story-title{font-weight:600;font-size:13px;margin-bottom:4px;}
+.story-meta{font-size:11px;color:var(--ink-mid);margin-bottom:10px;}
+.story-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.story-repl{font-size:12px;color:var(--ink-mid);font-style:italic;}
+
+/* ── KANBAN ── */
+.kb-event-picker{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.kb-event-btn{font-family:var(--sans);font-size:12px;font-weight:500;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--ink-mid);cursor:pointer;transition:all .15s;}
+.kb-event-btn:hover{border-color:var(--accent);color:var(--accent);}
+.kb-event-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.kb-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;}
+.kb-col{flex-shrink:0;width:220px;background:var(--page);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100vh - 220px);}
+.kb-col-head{padding:12px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.kb-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-mid);}
+.kb-col-count{font-family:var(--mono);font-size:10px;background:var(--border);border-radius:8px;padding:1px 6px;color:var(--ink-mid);}
+.kb-col-body{padding:10px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;}
+.kb-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;cursor:grab;transition:all .18s;position:relative;}
+.kb-card:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(79,70,229,.12);}
+.kb-card.dragging{opacity:.5;border-color:var(--accent);box-shadow:0 4px 16px rgba(79,70,229,.2);}
+.kb-card-title{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:5px;line-height:1.4;}
+.kb-card-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;}
+.kb-card-owner{font-size:10px;color:var(--ink-light);margin-top:4px;}
+.kb-card-approval{font-size:10px;background:var(--amber-s);color:var(--amber);border-radius:3px;padding:1px 5px;display:inline-block;margin-top:4px;}
+.kb-add-btn{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-light);padding:7px 10px;border-radius:4px;cursor:pointer;transition:background .12s;margin:0 10px 8px;border:1px dashed transparent;flex-shrink:0;}
+.kb-add-btn:hover{background:var(--accent-soft);color:var(--accent);border-color:#c7c7f5;}
+.kb-phase-divider{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-light);padding:4px 2px 2px;border-top:1px solid var(--border);margin-top:4px;}
+.kb-phase-divider:first-child{border-top:none;margin-top:0;}
+.kb-col-todo .kb-col-head{border-top:3px solid var(--ink-light);}
+.kb-col-doing .kb-col-head{border-top:3px solid var(--amber);}
+.kb-col-review .kb-col-head{border-top:3px solid var(--accent);}
+.kb-col-done .kb-col-head{border-top:3px solid var(--green);}
+.kb-col-blocked .kb-col-head{border-top:3px solid var(--red);}
+
+/* ── EVENT BIBLES ── */
+.bible-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.bible-tab{font-size:13px;font-weight:500;padding:8px 18px;cursor:pointer;color:var(--ink-mid);border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.bible-tab:hover{color:var(--ink);}
+.bible-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.bible-content{display:none;}.bible-content.active{display:block;}
+.timeline{position:relative;padding-left:28px;}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border);}
+.tl-phase{margin-bottom:28px;}
+.tl-phase-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.tl-dot{width:18px;height:18px;border-radius:50%;flex-shrink:0;position:absolute;left:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;}
+.tl-phase-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-mid);background:var(--page);padding:2px 8px;border-radius:10px;border:1px solid var(--border);}
+.tl-phase-timing{font-family:var(--mono);font-size:10px;color:var(--ink-light);margin-left:auto;}
+.tl-tasks{display:flex;flex-direction:column;gap:6px;margin-left:0;}
+.tl-task{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:10px 12px;display:flex;align-items:flex-start;gap:10px;}
+.tl-task-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.tl-task-body{flex:1;}
+.tl-task-title{font-size:13px;font-weight:500;margin-bottom:2px;}
+.tl-task-note{font-size:11px;color:var(--ink-mid);}
+.tl-task-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+.tl-tag{font-size:10px;padding:1px 6px;border-radius:3px;}
+.tl-tag-owner{background:#f3f4f6;color:var(--ink-mid);}
+.tl-tag-approval{background:var(--amber-s);color:var(--amber);}
+.tl-tag-supplier{background:var(--purple-s);color:var(--purple);}
+.tl-tag-comms{background:var(--accent-soft);color:var(--accent);}
+.bible-info{background:var(--page);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:18px;font-size:13px;color:var(--ink-mid);}
+.bible-info strong{color:var(--ink);}
+
+/* ── RETRO ── */
+.retro-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.retro-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.retro-card.worked{border-left:4px solid var(--green);}
+.retro-card.didnt{border-left:4px solid var(--red);}
+.retro-card.todo{border-left:4px solid var(--accent);}
+.retro-card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;}
+.retro-card.worked .retro-card-title{color:var(--green);}
+.retro-card.didnt .retro-card-title{color:var(--red);}
+.retro-card.todo .retro-card-title{color:var(--accent);}
+.retro-item{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:flex-start;}
+.retro-item:last-child{border-bottom:none;}
+.retro-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:7px;}
+.retro-card.worked .retro-dot{background:var(--green);}
+.retro-card.didnt .retro-dot{background:var(--red);}
+.retro-card.todo .retro-dot{background:var(--accent);}
+.retro-event-tag{font-size:10px;background:var(--page);color:var(--ink-mid);border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block;}
+.retro-month-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.retro-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.retro-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;text-align:center;}
+.retro-stat-val{font-size:22px;font-weight:600;margin-bottom:2px;}
+.retro-stat-label{font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;}
+
+/* ── EVENT FILE ── */
+.ef-header{background:var(--ink);border-radius:var(--r);padding:22px 26px;margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;}
+.ef-ref{font-family:var(--mono);font-size:11px;color:#818cf8;letter-spacing:.1em;margin-bottom:6px;}
+.ef-title{font-size:20px;font-weight:600;color:#fff;margin-bottom:4px;}
+.ef-meta{font-size:12px;color:rgba(255,255,255,.45);display:flex;gap:14px;flex-wrap:wrap;}
+.ef-meta-item{display:flex;align-items:center;gap:5px;}
+.ef-status-pill{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;letter-spacing:.04em;}
+.ef-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.ef-tab{font-size:13px;font-weight:500;padding:9px 18px;cursor:pointer;color:var(--ink-mid);border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.ef-tab:hover{color:var(--ink);}
+.ef-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.ef-section{display:none;}.ef-section.active{display:block;}
+.ef-picker{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+.ef-picker select{font-family:var(--sans);font-size:14px;font-weight:500;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:8px 12px;outline:none;cursor:pointer;}
+.ef-picker select:focus{border-color:var(--accent);}
+.feedback-block{background:var(--page);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;}
+.feedback-block-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-mid);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.feedback-quote{font-size:13px;color:var(--ink);padding:8px 12px;border-left:3px solid var(--border);margin-bottom:7px;line-height:1.55;}
+.feedback-quote.positive{border-color:var(--green);}
+.feedback-quote.negative{border-color:var(--red);}
+.stars{color:#f59e0b;font-size:13px;letter-spacing:1px;}
+.survey-link-box{background:var(--accent-soft);border:1px solid #c7c7f5;border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.survey-link-label{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:2px;}
+.survey-link-url{font-family:var(--mono);font-size:11px;color:var(--ink-mid);word-break:break-all;}
+.survey-copy-btn{font-family:var(--sans);font-size:11px;font-weight:500;padding:5px 10px;border-radius:4px;border:1px solid #c7c7f5;background:var(--surface);color:var(--accent);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.survey-copy-btn:hover{background:var(--accent);color:#fff;}
+.qr-placeholder{width:80px;height:80px;background:var(--ink);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:7px;color:#818cf8;text-align:center;padding:6px;flex-shrink:0;}
+.pm-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.pm-card{border-radius:var(--r);padding:14px 16px;}
+.pm-card.pos{background:var(--green-s);border:1px solid #bbf7d0;}
+.pm-card.neg{background:var(--red-s);border:1px solid #fecaca;}
+.pm-card.action{background:var(--accent-soft);border:1px solid #c7c7f5;grid-column:span 2;}
+.pm-card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px;}
+.pm-card.pos .pm-card-title{color:var(--green);}
+.pm-card.neg .pm-card-title{color:var(--red);}
+.pm-card.action .pm-card-title{color:var(--accent);}
+.pm-item{display:flex;gap:7px;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.06);}
+.pm-item:last-child{border-bottom:none;}
+.pm-bullet{flex-shrink:0;margin-top:5px;width:5px;height:5px;border-radius:50%;}
+.pm-card.pos .pm-bullet{background:var(--green);}
+.pm-card.neg .pm-bullet{background:var(--red);}
+.pm-card.action .pm-bullet{background:var(--accent);}
+
+/* ── ATTENDEES ── */
+.att-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.att-search{font-family:var(--sans);font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:5px;background:var(--page);outline:none;width:220px;}
+.att-search:focus{border-color:var(--accent);background:#fff;}
+.att-filter{font-family:var(--sans);font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:5px;background:var(--page);outline:none;cursor:pointer;}
+.att-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.att-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;text-align:center;}
+.att-stat-val{font-size:20px;font-weight:600;margin-bottom:2px;}
+.att-stat-label{font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;}
+.att-table{width:100%;border-collapse:collapse;font-size:13px;}
+.att-table th{font-size:10px;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--page);position:sticky;top:0;}
+.att-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.att-table tr:last-child td{border-bottom:none;}
+.att-table tr:hover td{background:var(--accent-soft);}
+.att-name{font-weight:500;}
+.att-org{font-size:11px;color:var(--ink-light);}
+.att-email{font-size:11px;color:var(--ink-mid);font-family:var(--mono);}
+.checkin-btn{font-size:11px;font-weight:500;padding:4px 10px;border-radius:4px;border:none;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.checkin-btn.in{background:var(--green-s);color:var(--green);}
+.checkin-btn.in:hover{background:var(--green);color:#fff;}
+.checkin-btn.out{background:var(--page);color:var(--ink-mid);border:1px solid var(--border);}
+.checkin-btn.out:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
+.diet-flag{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px;border-radius:3px;background:var(--amber-s);color:var(--amber);font-weight:500;}
+.access-flag{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px;border-radius:3px;background:var(--purple-s);color:var(--purple);font-weight:500;}
+.reg-form-box{background:var(--accent-soft);border:1px solid #c7c7f5;border-radius:var(--r);padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.reg-form-label{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:3px;}
+.reg-form-url{font-family:var(--mono);font-size:11px;color:var(--ink-mid);}
+.att-mode-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:5px;overflow:hidden;}
+.att-mode-btn{font-family:var(--sans);font-size:12px;font-weight:500;padding:6px 14px;border:none;cursor:pointer;background:var(--page);color:var(--ink-mid);transition:all .15s;}
+.att-mode-btn.active{background:var(--accent);color:#fff;}
+.att-export{margin-left:auto;}
+.diet-summary{background:var(--amber-s);border:1px solid #fcd34d;border-radius:4px;padding:8px 12px;font-size:12px;color:var(--amber);margin-bottom:14px;}
+
+/* ── STEP INDICATOR ── */
+.steps{display:flex;align-items:center;margin-bottom:22px;}
+.step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:var(--mono);background:var(--border);color:var(--ink-light);flex-shrink:0;transition:all .2s;}
+.step-dot.active{background:var(--accent);color:#fff;}
+.step-dot.done{background:var(--green);color:#fff;}
+.step-line{flex:1;height:2px;background:var(--border);transition:background .2s;}
+.step-line.done{background:var(--green);}
+
+/* ── DIVIDER ── */
+hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
+.mono{font-family:var(--mono);}
+.muted{color:var(--ink-light);}
+.small{font-size:12px;}
+.mb0{margin-bottom:0;}
+.mt8{margin-top:8px;}
+.mb12{margin-bottom:12px;}
+.flex{display:flex;}.gap8{gap:8px;}.gap12{gap:12px;}.items-c{align-items:center;}.j-between{justify-content:space-between;}.flex-wrap{flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">LISA <span>//</span> ops</div>
+    <div class="logo-sub">Events Hub</div>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <button class="nav-item active" onclick="go('dashboard',this)"><span class="icon">◉</span> Dashboard</button>
+  <button class="nav-item" onclick="go('calendar',this)"><span class="icon">◻</span> Calendar <span class="nav-badge amber">2</span></button>
+  <button class="nav-item" onclick="go('rooms',this)"><span class="icon">◻</span> Room Map</button>
+
+  <div class="nav-section">Events</div>
+  <button class="nav-item" onclick="go('tracker',this)"><span class="icon">◻</span> Event Tracker <span class="nav-badge red">1</span></button>
+  <button class="nav-item" onclick="go('intake',this)"><span class="icon">◻</span> New Request</button>
+  <button class="nav-item" onclick="go('feedback',this)"><span class="icon">◻</span> Post-Event Forms</button>
+
+  <div class="nav-section">Planning</div>
+  <button class="nav-item" onclick="go('team',this)"><span class="icon">◻</span> Team Capacity</button>
+  <button class="nav-item" onclick="go('budget',this)"><span class="icon">◻</span> Budget Tracker</button>
+  <button class="nav-item" onclick="go('templates',this)"><span class="icon">◻</span> Comms Templates</button>
+
+  <div class="nav-section">Boards</div>
+  <button class="nav-item" onclick="go('kanban',this)"><span class="icon">◻</span> Event Boards</button>
+  <button class="nav-item" onclick="go('bibles',this)"><span class="icon">◻</span> Event Bibles</button>
+  <button class="nav-item" onclick="go('retro',this)"><span class="icon">◻</span> Monthly Retro</button>
+
+  <div class="nav-section">Reference</div>
+  <button class="nav-item" onclick="go('eventfile',this)"><span class="icon">◻</span> Event File</button>
+  <button class="nav-item" onclick="go('alignment',this)"><span class="icon">◻</span> Alignment Guide</button>
+  <button class="nav-item" onclick="go('stories',this)"><span class="icon">◻</span> Success Stories</button>
+  <button class="nav-item" onclick="go('digest',this)"><span class="icon">◻</span> Daily Digest</button>
+
+  <div class="sidebar-footer">v2 · July 2026</div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title" id="topbar-title">Dashboard</div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-sm" onclick="go('digest',document.querySelector('.nav-item:last-of-type'))">📨 Send digest</button>
+    <button class="btn btn-primary btn-sm" onclick="go('intake',null)">+ New request</button>
+  </div>
+</div>
+<div class="content">
+
+<!-- ══ DASHBOARD ══ -->
+<div class="panel active" id="p-dashboard">
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">This week</div><div class="stat-val">3</div><div class="stat-sub">events running</div></div>
+    <div class="stat-card"><div class="stat-label">Pending review</div><div class="stat-val" style="color:var(--amber)">2</div><div class="stat-sub">awaiting decision</div></div>
+    <div class="stat-card"><div class="stat-label">Capacity alerts</div><div class="stat-val" style="color:var(--red)">1</div><div class="stat-sub">staffing gap</div></div>
+    <div class="stat-card"><div class="stat-label">Budget used</div><div class="stat-val" style="color:var(--accent)">68%</div><div class="stat-sub">£2,040 / £3,000</div></div>
+  </div>
+
+  <div class="card mb0">
+    <div class="card-title">Upcoming events — next 14 days</div>
+    <table class="tbl">
+      <thead><tr><th>Event</th><th>Date</th><th>Type</th><th>Owner</th><th>Progress</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr class="clickable" onclick="openChecklist('Mechanistic Interpretability Talk','speaker',80)">
+          <td><div class="tbl-name">Mechanistic Interpretability Talk</div><div class="tbl-sub">Apollo Research · 55 attendees</div></td>
+          <td><span class="mono small">02 Jul</span></td>
+          <td><span class="badge bb">Speaker</span></td>
+          <td><span class="small">Priya S.</span></td>
+          <td><div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:80%"></div></div><div class="prog-pct">8/10</div></div></td>
+          <td><span class="badge bg">On track</span></td>
+          <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openBudgetModal('Mechanistic Interpretability Talk')">£</button></td>
+        </tr>
+        <tr class="clickable" onclick="openChecklist('Women in AI Safety Social','social',50)">
+          <td><div class="tbl-name">Women in AI Safety Social</div><div class="tbl-sub">LISA-led · ~40 attendees</div></td>
+          <td><span class="mono small">07 Jul</span></td>
+          <td><span class="badge bk">Mixer</span></td>
+          <td><span class="small">Lena K.</span></td>
+          <td><div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:50%"></div></div><div class="prog-pct">5/10</div></div></td>
+          <td><span class="badge ba">Needs attention</span></td>
+          <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openBudgetModal('Women in AI Safety Social')">£</button></td>
+        </tr>
+        <tr class="clickable" onclick="openChecklist('AI Governance Reading Group','reading',20)">
+          <td><div class="tbl-name">AI Governance Reading Group</div><div class="tbl-sub">LISA-led · 20 attendees</div></td>
+          <td><span class="mono small">10 Jul</span></td>
+          <td><span class="badge bb">Seminar</span></td>
+          <td><span class="small" style="color:var(--red)">⚠ Unassigned</span></td>
+          <td><div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:20%"></div></div><div class="prog-pct">2/10</div></div></td>
+          <td><span class="badge br">No owner</span></td>
+          <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openBudgetModal('AI Governance Reading Group')">£</button></td>
+        </tr>
+        <tr class="clickable" onclick="openChecklist('Governance Hackathon','hackathon',0)">
+          <td><div class="tbl-name">Governance Hackathon</div><div class="tbl-sub">DeepMind / external · est. 80 attendees</div></td>
+          <td><span class="mono small">18 Jul</span></td>
+          <td><span class="badge bp">Workshop</span></td>
+          <td><span class="small muted">Pending</span></td>
+          <td><div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:0%"></div></div><div class="prog-pct">—</div></div></td>
+          <td><span class="badge ba">Reviewing</span></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ CALENDAR ══ -->
+<div class="panel" id="p-calendar">
+  <div class="cal-header">
+    <div class="cal-month">July 2026</div>
+    <div class="cal-legend">
+      <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--green)"></div>Confirmed (room + owner)</div>
+      <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--amber)"></div>Provisional (enquiry)</div>
+      <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--accent)"></div>Externally organised</div>
+      <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--red)"></div>Conflict ⚠</div>
+    </div>
+  </div>
+  <div class="card" style="padding:14px;">
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+</div>
+
+<!-- ══ ROOMS ══ -->
+<div class="panel" id="p-rooms">
+  <div class="flex items-c j-between mb12">
+    <div>
+      <div style="font-size:15px;font-weight:600;">Room Availability</div>
+      <div class="small muted">Checking: <span class="mono" id="roomDateLabel">02 Jul 2026, 18:00–20:30</span></div>
+    </div>
+    <div class="flex gap8">
+      <input type="date" id="roomDate" style="width:150px;" value="2026-07-02" onchange="updateRooms()">
+      <input type="time" id="roomTime" style="width:120px;" value="18:00" onchange="updateRooms()">
+    </div>
+  </div>
+  <div class="info">⚠ Always check this before accepting a date. Rooms shown as available may have maintenance or access restrictions — confirm with building manager for events > 50 attendees.</div>
+  <div class="rooms-grid" id="roomsGrid"></div>
+</div>
+
+<!-- ══ TRACKER ══ -->
+<div class="panel" id="p-tracker">
+  <div class="card">
+    <div class="card-title">All events · July 2026</div>
+    <table class="tbl">
+      <thead><tr><th>Event</th><th>Date</th><th>Reg. closes</th><th>Type</th><th>Owner</th><th>Attendees</th><th>Progress</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr class="clickable" onclick="openChecklist('Mechanistic Interpretability Talk','speaker',80)">
+          <td><div class="tbl-name">Mechanistic Interpretability Talk</div><div class="tbl-sub">Apollo Research</div></td>
+          <td><span class="mono small">02 Jul</span></td>
+          <td><span class="mono small" style="color:var(--green)">30 Jun</span></td>
+          <td><span class="badge bb">Speaker</span></td>
+          <td>Priya S.</td>
+          <td><span class="mono small">47 / 60</span></td>
+          <td><div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:80%"></div></div><div class="prog-pct">8/10</div></div></td>
+          <td><span class="badge bg">On track</span></td>
+        </tr>
+        <tr class="clickable" onclick="openChecklist('Women in AI Safety Social','social',50)">
+          <td><div class="tbl-name">Women in AI Safety Social</div><div class="tbl-sub">LISA-led</div></td>
+          <td><span class="mono small">07 Jul</span></td>
+          <td><span class="mono small" style="color:var(--amber)">04 Jul</span></td>
+          <td><span class="badge bk">Mixer</span></td>
+          <td>Lena K.</td>
+          <td><span class="mono small">28 / 50</span></td>
+          <td><div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:50%"></div></div><div class="prog-pct">5/10</div></div></td>
+          <td><span class="badge ba">Needs attention</span></td>
+        </tr>
+        <tr class="clickable" onclick="openChecklist('AI Governance Reading Group','reading',20)">
+          <td><div class="tbl-name">AI Governance Reading Group</div><div class="tbl-sub">LISA-led</div></td>
+          <td><span class="mono small">10 Jul</span></td>
+          <td><span class="mono small">08 Jul</span></td>
+          <td><span class="badge bb">Seminar</span></td>
+          <td><span style="color:var(--red)">⚠ None</span></td>
+          <td><span class="mono small">12 / 20</span></td>
+          <td><div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:20%"></div></div><div class="prog-pct">2/10</div></div></td>
+          <td><span class="badge br">No owner</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ INTAKE ══ -->
+<div class="panel" id="p-intake">
+  <div class="steps">
+    <div class="step-dot active" id="sd1">1</div><div class="step-line" id="sl1"></div>
+    <div class="step-dot" id="sd2">2</div><div class="step-line" id="sl2"></div>
+    <div class="step-dot" id="sd3">✓</div>
+  </div>
+
+  <div id="intake-s1">
+    <div class="card">
+      <div class="card-title">Event details</div>
+      <div class="form-grid">
+        <div class="field"><label>Organisation <span class="req">*</span></label><input type="text" id="i-org" placeholder="e.g. Apollo Research"></div>
+        <div class="field"><label>Contact email <span class="req">*</span></label><input type="email" id="i-email" placeholder="contact@org.com"></div>
+        <div class="field"><label>Event title <span class="req">*</span></label><input type="text" id="i-title" placeholder="e.g. Interpretability Workshop"></div>
+        <div class="field">
+          <label>Event type <span class="req">*</span></label>
+          <select id="i-type" onchange="updateDeadline()">
+            <option value="">Select…</option>
+            <option value="speaker">Visiting speaker / talk</option>
+            <option value="panel">Panel discussion</option>
+            <option value="hackathon">Workshop / hackathon</option>
+            <option value="social">Networking / social mixer</option>
+            <option value="reading">Reading group / seminar</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Preferred date <span class="req">*</span></label><input type="date" id="i-date" onchange="checkConflict()"></div>
+        <div class="field"><label>Start time</label><input type="time" id="i-time" value="18:30"></div>
+        <div class="field"><label>Expected attendees <span class="req">*</span></label><input type="number" id="i-att" placeholder="e.g. 40"></div>
+        <div class="field"><label>Registration deadline <span class="req">*</span></label><input type="date" id="i-reg" placeholder="Auto-set by event type"></div>
+      </div>
+      <div id="deadline-hint" style="font-size:12px;color:var(--ink-mid);margin-top:8px;padding:8px 10px;background:var(--page);border-radius:4px;display:none;"></div>
+      <div id="conflict-warn" style="display:none;margin-top:10px;" class="info">⚠ <strong>Possible conflict:</strong> another event is provisionally booked on this date. Check the Room Map before accepting.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Alignment check</div>
+      <div class="field mb12">
+        <label>Primary topic area <span class="req">*</span></label>
+        <div class="chips">
+          <label class="chip"><input type="checkbox" name="topic" value="alignment" onchange="calcScore()"> AI alignment / safety research</label>
+          <label class="chip"><input type="checkbox" name="topic" value="governance" onchange="calcScore()"> AI governance / policy</label>
+          <label class="chip"><input type="checkbox" name="topic" value="interp" onchange="calcScore()"> Interpretability / evaluation</label>
+          <label class="chip"><input type="checkbox" name="topic" value="community" onchange="calcScore()"> Community building</label>
+          <label class="chip"><input type="checkbox" name="topic" value="adjacent" onchange="calcScore()"> AI capabilities (adjacent)</label>
+          <label class="chip"><input type="checkbox" name="topic" value="other" onchange="calcScore()"> Other</label>
+        </div>
+      </div>
+      <div class="field mb12">
+        <label>Target audience <span class="req">*</span></label>
+        <div class="chips">
+          <label class="chip"><input type="radio" name="aud" value="researchers" onchange="calcScore()"> Researchers / technical</label>
+          <label class="chip"><input type="radio" name="aud" value="policy" onchange="calcScore()"> Policy / governance</label>
+          <label class="chip"><input type="radio" name="aud" value="students" onchange="calcScore()"> Students / early career</label>
+          <label class="chip"><input type="radio" name="aud" value="mixed" onchange="calcScore()"> Mixed / general</label>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field s2"><label>What is the aim of the event? <span class="req">*</span></label><textarea id="i-aim" placeholder="What should attendees leave knowing, feeling, or able to do?" oninput="calcScore()"></textarea></div>
+        <div class="field s2"><label>How does this connect to AI safety? Why should it be held at LISA? <span class="req">*</span></label><textarea id="i-why" placeholder="Be specific — this is the main triage question." oninput="calcScore()"></textarea></div>
+        <div class="field">
+          <label>Has the speaker / organiser engaged with LISA before?</label>
+          <div class="chips mt8">
+            <label class="chip"><input type="radio" name="prev" value="yes" onchange="calcScore()"> Yes</label>
+            <label class="chip"><input type="radio" name="prev" value="no"> No</label>
+            <label class="chip"><input type="radio" name="prev" value="unsure"> Not sure</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Event led by <span class="req">*</span></label>
+          <div class="chips mt8">
+            <label class="chip"><input type="radio" name="led" value="lisa"> LISA</label>
+            <label class="chip"><input type="radio" name="led" value="external"> External org, LISA hosting</label>
+            <label class="chip"><input type="radio" name="led" value="collab"> Collaboration</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE SCORE -->
+      <div class="score-box">
+        <div style="font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Live alignment score</div>
+        <div class="score-row"><div class="score-name">Topic relevance</div><div class="score-bar-wrap"><div class="score-fill" id="sb-topic" style="width:0%"></div></div><div class="score-pts" id="sv-topic">—</div></div>
+        <div class="score-row"><div class="score-name">Audience fit</div><div class="score-bar-wrap"><div class="score-fill" id="sb-aud" style="width:0%"></div></div><div class="score-pts" id="sv-aud">—</div></div>
+        <div class="score-row"><div class="score-name">Rationale quality</div><div class="score-bar-wrap"><div class="score-fill" id="sb-why" style="width:0%"></div></div><div class="score-pts" id="sv-why">—</div></div>
+        <div class="score-row"><div class="score-name">Prior LISA engagement</div><div class="score-bar-wrap"><div class="score-fill" id="sb-prev" style="width:0%"></div></div><div class="score-pts" id="sv-prev">—</div></div>
+        <div class="score-total-row">
+          <div class="score-total-num">Total: <span id="score-total" class="mono">—</span> / 10</div>
+          <div class="verdict" id="score-verdict" style="background:#f3f4f6;color:var(--ink-mid);">Awaiting input</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="intakeNext()">Continue to logistics →</button>
+      <span class="small muted">~3 min</span>
+    </div>
+  </div>
+
+  <div id="intake-s2" style="display:none">
+    <div class="card">
+      <div class="card-title">Logistics</div>
+      <div class="form-grid g3">
+        <div class="field"><label>Room preference</label>
+          <select><option>Main hall (cap. 100)</option><option>Seminar room A (cap. 30)</option><option>Seminar room B (cap. 20)</option><option>Workshop space (cap. 40)</option><option>No preference</option></select>
+        </div>
+        <div class="field"><label>Setup needed</label><select><option>30 min before</option><option>1 hour before</option><option>2 hours before</option></select></div>
+        <div class="field"><label>Estimated budget (£)</label><input type="number" placeholder="e.g. 300"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">AV & refreshments</div>
+      <div class="form-grid">
+        <div class="field"><label>AV requirements</label>
+          <div class="chips mt8">
+            <label class="chip"><input type="checkbox"> Projector</label>
+            <label class="chip"><input type="checkbox"> Microphone</label>
+            <label class="chip"><input type="checkbox"> Recording</label>
+            <label class="chip"><input type="checkbox"> Hybrid / live</label>
+            <label class="chip"><input type="checkbox"> Whiteboard</label>
+          </div>
+        </div>
+        <div class="field"><label>Refreshments</label>
+          <div class="chips mt8">
+            <label class="chip"><input type="checkbox"> Tea / coffee</label>
+            <label class="chip"><input type="checkbox"> Drinks / wine</label>
+            <label class="chip"><input type="checkbox"> Light food</label>
+            <label class="chip"><input type="checkbox"> Full catering</label>
+            <label class="chip"><input type="checkbox"> None</label>
+          </div>
+        </div>
+        <div class="field"><label>Dietary requirements</label><textarea placeholder="Known requirements, or note if unknown"></textarea></div>
+        <div class="field"><label>Marketing support needed from LISA</label>
+          <div class="chips mt8">
+            <label class="chip"><input type="checkbox"> LinkedIn post</label>
+            <label class="chip"><input type="checkbox"> Luma listing</label>
+            <label class="chip"><input type="checkbox"> Newsletter</label>
+            <label class="chip"><input type="checkbox"> Community Slack</label>
+            <label class="chip"><input type="checkbox"> None — self-managed</label>
+          </div>
+        </div>
+        <div class="field"><label>Speaker name(s)</label><input type="text" placeholder="Full name, affiliation"></div>
+        <div class="field"><label>Speaker bio / link</label><input type="text" placeholder="URL or short bio"></div>
+        <div class="field s2"><label>Any other requirements or notes</label><textarea placeholder="Accessibility, VIP guests, security, etc."></textarea></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="intakeBack()">← Back</button>
+      <button class="btn btn-primary" onclick="intakeDone()">Submit request</button>
+    </div>
+  </div>
+
+  <div id="intake-s3" style="display:none">
+    <div class="card" style="text-align:center;padding:44px;">
+      <div style="font-size:42px;margin-bottom:14px;">✓</div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Request submitted</div>
+      <div class="small muted" style="max-width:400px;margin:0 auto 20px;">A LISA team member will review within 2 working days. Acceptance is not confirmed until you receive written confirmation.</div>
+      <div style="font-family:var(--mono);font-size:12px;background:var(--accent-soft);color:var(--accent);padding:8px 16px;border-radius:4px;display:inline-block;">REF: LISA-2026-0047</div>
+      <div class="btn-row" style="justify-content:center;margin-top:20px;">
+        <button class="btn btn-ghost" onclick="intakeReset()">Submit another</button>
+        <button class="btn btn-primary" onclick="go('tracker',null)">View tracker →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FEEDBACK FORMS ══ -->
+<div class="panel" id="p-feedback">
+  <div class="flex gap12 mb12" style="flex-wrap:wrap;">
+    <button class="btn btn-ghost btn-sm" onclick="showFeedbackTab('internal')">Internal (LISA team)</button>
+    <button class="btn btn-ghost btn-sm" onclick="showFeedbackTab('org')">Organisation / host</button>
+    <button class="btn btn-primary btn-sm" onclick="showFeedbackTab('attendee')">Attendee (QR code form)</button>
+  </div>
+  <div id="fb-internal">
+    <div class="card">
+      <div class="card-title">Post-event form — LISA team</div>
+      <div class="form-grid">
+        <div class="field"><label>Event name</label><input type="text" placeholder="e.g. Mech Interp Talk"></div>
+        <div class="field"><label>Date</label><input type="date"></div>
+        <div class="field"><label>Actual attendance vs expected</label><input type="text" placeholder="e.g. 52 / 60"></div>
+        <div class="field"><label>Was the room the right size?</label><select><option>Yes — perfect</option><option>Too big</option><option>Too small</option></select></div>
+        <div class="field"><label>AV — any issues?</label><textarea placeholder="Note any failures or near-misses"></textarea></div>
+        <div class="field"><label>Catering — sufficient / appropriate?</label><textarea placeholder="Ran out of food? Wrong dietary options?"></textarea></div>
+        <div class="field"><label>Staffing — enough people on the day?</label><select><option>Yes</option><option>Understaffed</option><option>Overstaffed</option></select></div>
+        <div class="field"><label>Was the room cleaned and reset after?</label><select><option>Yes — fully reset</option><option>Partially</option><option>No — issue to log</option></select></div>
+        <div class="field s2"><label>What worked well? (replicate this)</label><textarea placeholder="Be specific — what should we copy next time?"></textarea></div>
+        <div class="field s2"><label>What would you do differently?</label><textarea placeholder="For the lessons log"></textarea></div>
+        <div class="field"><label>Overall event quality (1–5)</label><select><option>5 — excellent</option><option>4 — good</option><option>3 — fine</option><option>2 — below par</option><option>1 — poor</option></select></div>
+        <div class="field"><label>Nominate for success stories archive?</label><select><option>No</option><option>Yes — add to archive</option></select></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary">Submit debrief</button></div>
+    </div>
+  </div>
+  <div id="fb-org" style="display:none">
+    <div class="card">
+      <div class="card-title">Post-event form — organising org / host</div>
+      <div class="form-grid">
+        <div class="field"><label>Organisation</label><input type="text"></div>
+        <div class="field"><label>Event date</label><input type="date"></div>
+        <div class="field s2"><label>Did LISA meet your logistical expectations?</label><select><option>Yes — fully</option><option>Mostly</option><option>Partially</option><option>No</option></select></div>
+        <div class="field s2"><label>Anything LISA could have done better?</label><textarea></textarea></div>
+        <div class="field s2"><label>Would you hold an event at LISA again?</label><select><option>Yes, definitely</option><option>Probably</option><option>Unsure</option><option>No</option></select></div>
+        <div class="field s2"><label>Any other comments</label><textarea></textarea></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary">Submit feedback</button></div>
+    </div>
+  </div>
+  <div id="fb-attendee" style="display:none">
+    <div class="card" style="max-width:480px;">
+      <div class="card-title">Attendee feedback — shareable via QR</div>
+      <div style="background:var(--ink);border-radius:8px;width:140px;height:140px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-family:var(--mono);font-size:9px;color:#818cf8;text-align:center;padding:12px;">[ QR code generated on event creation — links to this form ]</div>
+      <div class="form-grid full">
+        <div class="field"><label>Which event did you attend?</label><input type="text"></div>
+        <div class="field"><label>How would you rate the content? (1–5)</label><select><option>5 — excellent</option><option>4</option><option>3</option><option>2</option><option>1 — poor</option></select></div>
+        <div class="field"><label>How would you rate the venue / logistics? (1–5)</label><select><option>5 — excellent</option><option>4</option><option>3</option><option>2</option><option>1</option></select></div>
+        <div class="field"><label>What was most valuable?</label><textarea></textarea></div>
+        <div class="field"><label>What could be improved?</label><textarea></textarea></div>
+        <div class="field"><label>Would you come to another LISA event?</label><select><option>Yes, definitely</option><option>Probably</option><option>Unsure</option><option>No</option></select></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary">Submit</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TEAM ══ -->
+<div class="panel" id="p-team">
+  <div class="info">Capacity is calculated across all events in the current 30-day window. Aim to keep load below 70% per person to allow for day-of contingencies.</div>
+  <div class="team-grid" id="teamGrid"></div>
+</div>
+
+<!-- ══ BUDGET ══ -->
+<div class="panel" id="p-budget">
+  <div class="budget-summary">
+    <div class="budget-sum-item"><div class="budget-sum-label">Monthly budget</div><div class="budget-sum-val">£3,000</div></div>
+    <div class="budget-sum-item"><div class="budget-sum-label">Committed</div><div class="budget-sum-val" style="color:var(--amber)">£2,040</div></div>
+    <div class="budget-sum-item"><div class="budget-sum-label">Remaining</div><div class="budget-sum-val" style="color:var(--green)">£960</div></div>
+    <div class="budget-sum-item"><div class="budget-sum-label">Overspend risk</div><div class="budget-sum-val" style="color:var(--red)">1 event</div></div>
+  </div>
+  <div class="card mb0">
+    <div class="card-title">Budget by event — July 2026</div>
+    <div id="budgetTable"></div>
+  </div>
+</div>
+
+<!-- ══ TEMPLATES ══ -->
+<div class="panel" id="p-templates">
+  <div class="flex gap8 mb12" id="tmplEventPicker">
+    <button class="btn btn-ghost btn-sm" onclick="setTmplEvent('speaker')">Speaker talk</button>
+    <button class="btn btn-ghost btn-sm" onclick="setTmplEvent('social')">Social mixer</button>
+    <button class="btn btn-ghost btn-sm" onclick="setTmplEvent('hackathon')">Workshop / hackathon</button>
+    <button class="btn btn-ghost btn-sm" onclick="setTmplEvent('reading')">Reading group</button>
+  </div>
+  <div class="tmpl-tabs" id="tmplTabs">
+    <button class="tmpl-tab active" onclick="showTmpl('linkedin',this)">LinkedIn</button>
+    <button class="tmpl-tab" onclick="showTmpl('luma',this)">Luma listing</button>
+    <button class="tmpl-tab" onclick="showTmpl('newsletter',this)">Newsletter</button>
+    <button class="tmpl-tab" onclick="showTmpl('thankyou',this)">Thank-you email</button>
+    <button class="tmpl-tab" onclick="showTmpl('inprogress',this)">Event in progress</button>
+  </div>
+  <div id="tmplContent"></div>
+  <div class="btn-row">
+    <button class="btn btn-ghost btn-sm" onclick="copyTemplate()">Copy to clipboard</button>
+    <span class="small muted">Customise <span class="mono" style="background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:3px;">[BRACKETS]</span> before sending</span>
+  </div>
+</div>
+
+<!-- ══ ALIGNMENT ══ -->
+<div class="panel" id="p-alignment">
+  <div class="info">📋 Internal version. A sanitised public-facing version of this guide is linked on the LISA website to help applicants self-select before submitting.</div>
+  <div class="card">
+    <div class="card-title">✓ Events we run</div>
+    <table class="tbl">
+      <thead><tr><th>Category</th><th>Examples</th><th>Typical size</th><th>Registration closes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>AI safety research talks</strong></td><td>Alignment lab speaker, interpretability, evaluation</td><td>30–80</td><td>3 days before</td></tr>
+        <tr><td><strong>AI governance / policy</strong></td><td>Frontier AI regulation, compute governance</td><td>20–60</td><td>5 days before</td></tr>
+        <tr><td><strong>Community building</strong></td><td>Women in AI safety, EA social, career mixer</td><td>20–50</td><td>2 days before</td></tr>
+        <tr><td><strong>Workshops / hackathons</strong></td><td>Red-teaming, model evaluation, technical upskilling</td><td>10–40</td><td>7 days before</td></tr>
+        <tr><td><strong>Reading groups</strong></td><td>Weekly paper reading, seminar</td><td>5–20</td><td>1 day before</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title">✗ Events we decline</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="background:var(--red-s);color:var(--red);padding:8px 12px;border-radius:4px;font-size:13px;">General AI capabilities events with no safety angle</div>
+      <div style="background:var(--red-s);color:var(--red);padding:8px 12px;border-radius:4px;font-size:13px;">Commercial product launches using LISA as a venue</div>
+      <div style="background:var(--red-s);color:var(--red);padding:8px 12px;border-radius:4px;font-size:13px;">Recruiting events by labs not engaged with safety</div>
+      <div style="background:var(--red-s);color:var(--red);padding:8px 12px;border-radius:4px;font-size:13px;">Events > 100 attendees without confirmed additional LISA resource</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">⚠ Grey zone — escalate for team decision</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="background:var(--amber-s);color:var(--amber);padding:8px 12px;border-radius:4px;font-size:13px;">Capabilities-adjacent (LLMs, agents) without explicit safety framing — check with Programme Lead</div>
+      <div style="background:var(--amber-s);color:var(--amber);padding:8px 12px;border-radius:4px;font-size:13px;">For-profit organisations using LISA space — check conflict of interest policy</div>
+      <div style="background:var(--amber-s);color:var(--amber);padding:8px 12px;border-radius:4px;font-size:13px;">Events > 80 attendees — confirm staffing before accepting</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Scoring & approval thresholds</div>
+    <table class="tbl">
+      <thead><tr><th>Score</th><th>Decision</th><th>Approval route</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge bg">8–10</span></td><td>Strong alignment</td><td>Event owner accepts directly — no further approval needed</td></tr>
+        <tr><td><span class="badge ba">5–7</span></td><td>Borderline</td><td>Post to #events-review Slack channel; decision within 48h</td></tr>
+        <tr><td><span class="badge br">0–4</span></td><td>Poor fit</td><td>Decline with standard email; log reason in tracker</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ SUCCESS STORIES ══ -->
+<div class="panel" id="p-stories">
+  <div class="info">🏆 When the internal post-event form nominates an event as a success, it's added here. Use these as templates — replicate what worked.</div>
+  <div id="storiesContainer"></div>
+</div>
+
+<!-- ══ DAILY DIGEST ══ -->
+<div class="panel" id="p-digest">
+  <div class="flex gap12 mb12" style="flex-wrap:wrap;align-items:center;">
+    <div>
+      <div style="font-size:15px;font-weight:600;">Daily digest &amp; weekly leadership report</div>
+      <div class="small muted">Auto-generated at 17:30 each day. Weekly version sends Friday 16:00.</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm">Preview weekly report</button>
+      <button class="btn btn-primary btn-sm" onclick="sendDigest()">Send daily digest now</button>
+    </div>
+  </div>
+  <div class="digest-box" id="digestContent"></div>
+</div>
+
+<!-- ══ KANBAN / EVENT BOARDS ══ -->
+<div class="panel" id="p-kanban">
+  <div style="margin-bottom:16px;">
+    <div style="font-size:13px;color:var(--ink-mid);margin-bottom:10px;">Select an event to view its board:</div>
+    <div class="kb-event-picker" id="kb-picker"></div>
+  </div>
+  <div id="kb-board-area"></div>
+</div>
+
+<!-- ══ EVENT BIBLES ══ -->
+<div class="panel" id="p-bibles">
+  <div class="bible-tabs" id="bible-tab-bar">
+    <button class="bible-tab active" onclick="showBible('speaker',this)">Speaker / Talk</button>
+    <button class="bible-tab" onclick="showBible('social',this)">Social Mixer</button>
+    <button class="bible-tab" onclick="showBible('hackathon',this)">Workshop / Hackathon</button>
+    <button class="bible-tab" onclick="showBible('reading',this)">Reading Group</button>
+    <button class="bible-tab" onclick="showBible('panel',this)">Panel Discussion</button>
+  </div>
+  <div id="bible-body"></div>
+</div>
+
+<!-- ══ MONTHLY RETRO ══ -->
+<div class="panel" id="p-retro">
+  <div class="retro-month-header">
+    <div>
+      <div style="font-size:15px;font-weight:600;">Monthly Retrospective</div>
+      <div class="small muted">June 2026 · 11 events held · compiled from post-event debriefs</div>
+    </div>
+    <button class="btn btn-ghost btn-sm">Export to PDF</button>
+  </div>
+  <div class="retro-summary-row">
+    <div class="retro-stat"><div class="retro-stat-val">11</div><div class="retro-stat-label">Events held</div></div>
+    <div class="retro-stat"><div class="retro-stat-val" style="color:var(--green)">4.3</div><div class="retro-stat-label">Avg rating /5</div></div>
+    <div class="retro-stat"><div class="retro-stat-val" style="color:var(--amber)">84%</div><div class="retro-stat-label">Avg attendance</div></div>
+    <div class="retro-stat"><div class="retro-stat-val" style="color:var(--accent)">£2,820</div><div class="retro-stat-label">Total spend</div></div>
+  </div>
+  <div class="retro-grid" id="retro-grid"></div>
+  <div class="card">
+    <div class="card-title">Actions carried forward to July</div>
+    <div id="retro-actions"></div>
+  </div>
+</div>
+
+<!-- ══ EVENT FILE ══ -->
+<div class="panel" id="p-eventfile">
+  <div id="ef-search-wrap" style="margin-bottom:20px;">
+    <div style="position:relative;max-width:520px;">
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-light);font-size:15px;pointer-events:none;">⌕</span>
+      <input type="text" id="ef-search" placeholder="Search by event ID (e.g. LISA-2026-0044) or name…"
+        style="padding-left:36px;font-size:14px;width:100%;border-radius:6px;border:1px solid var(--border);background:var(--surface);"
+        oninput="efSearch(this.value)" onkeydown="efSearchKey(event)" autocomplete="off">
+    </div>
+    <div id="ef-results" style="max-width:520px;background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-top:4px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.1);overflow:hidden;position:relative;z-index:10;"></div>
+    <div id="ef-no-result" style="display:none;max-width:520px;font-size:13px;color:var(--ink-light);padding:10px 4px;">No event found. Try the ref ID (e.g. LISA-2026-0044) or part of the event name.</div>
+  </div>
+
+  <div id="ef-header-area"></div>
+
+  <div class="ef-tabs">
+    <button class="ef-tab active" onclick="efTab('overview',this)">Overview</button>
+    <button class="ef-tab" onclick="efTab('checklist',this)">Checklist</button>
+    <button class="ef-tab" onclick="efTab('attendees',this)">Attendees</button>
+    <button class="ef-tab" onclick="efTab('postmortem',this)">LISA Post-mortem</button>
+    <button class="ef-tab" onclick="efTab('orgfeedback',this)">Org feedback</button>
+    <button class="ef-tab" onclick="efTab('attendeefeedback',this)">Attendee feedback</button>
+    <button class="ef-tab" onclick="efTab('surveys',this)">Survey links</button>
+  </div>
+
+  <div class="ef-section active" id="ef-overview"></div>
+  <div class="ef-section" id="ef-checklist"></div>
+  <div class="ef-section" id="ef-attendees"></div>
+  <div class="ef-section" id="ef-postmortem"></div>
+  <div class="ef-section" id="ef-orgfeedback"></div>
+  <div class="ef-section" id="ef-attendeefeedback"></div>
+  <div class="ef-section" id="ef-surveys"></div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- ══════════ CHECKLIST MODAL ══════════ -->
+<div class="overlay" id="clOverlay">
+  <div class="modal">
+    <div class="modal-hd">
+      <div>
+        <div class="modal-title" id="cl-title">Event Checklist</div>
+        <div class="small muted mt8" id="cl-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('clOverlay')">×</button>
+    </div>
+    <div id="cl-body"></div>
+    <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="closeModal('clOverlay')">Save</button></div>
+  </div>
+</div>
+
+<!-- ══════════ BUDGET MODAL ══════════ -->
+<div class="overlay" id="budgetOverlay">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title" id="bm-title">Budget — Event</div>
+      <button class="modal-close" onclick="closeModal('budgetOverlay')">×</button>
+    </div>
+    <div id="bm-body"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════
+// NAV
+// ══════════════════════
+const TITLES = {dashboard:'Dashboard',calendar:'Calendar',rooms:'Room Map',tracker:'Event Tracker',intake:'New Request',feedback:'Post-Event Forms',team:'Team Capacity',budget:'Budget Tracker',templates:'Comms Templates',alignment:'Alignment Guide',stories:'Success Stories',digest:'Daily Digest',kanban:'Event Boards',bibles:'Event Bibles',retro:'Monthly Retrospective',eventfile:'Event File'};
+
+function go(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(n=>{ if(n.textContent.trim().startsWith(TITLES[id]?.split(' ')[0]||'')) n.classList.add('active'); });
+  }
+  document.getElementById('topbar-title').textContent = TITLES[id]||id;
+  if(id==='calendar') renderCal();
+  if(id==='rooms') renderRooms();
+  if(id==='team') renderTeam();
+  if(id==='budget') renderBudget();
+  if(id==='templates') { setTmplEvent('speaker'); showTmpl('linkedin', document.querySelector('.tmpl-tab')); }
+  if(id==='stories') renderStories();
+  if(id==='digest') renderDigest();
+  if(id==='kanban') initKanbanPicker();
+  if(id==='bibles') showBible('speaker', document.querySelector('.bible-tab'));
+  if(id==='retro') renderRetro();
+  if(id==='eventfile') loadEventFile();
+}
+
+// ══════════════════════
+// CALENDAR
+// ══════════════════════
+const CAL_DATA = {
+  2:  [{label:'Mech Interp Talk',type:'ev-green',owner:'Priya S.'}],
+  7:  [{label:'Women in AI Social',type:'ev-amber',owner:'Lena K.'}],
+  9:  [{label:'Reading Group',type:'ev-green',owner:'Tom B.'}],
+  10: [{label:'AI Gov Reading Grp',type:'ev-green',owner:'TBC'}],
+  14: [{label:'DeepMind Visit',type:'ev-amber',owner:'Priya S.'},{label:'External Talk ⚠',type:'ev-conflict',owner:'—'}],
+  15: [{label:'Safety Workshop',type:'ev-amber',owner:'Ana V.'}],
+  18: [{label:'Governance Hack',type:'ev-amber',owner:'Pending'}],
+  22: [{label:'Speaker: FHI',type:'ev-green',owner:'Lena K.'}],
+  23: [{label:'Mixer',type:'ev-green',owner:'Tom B.'}],
+  28: [{label:'Panel: Evals',type:'ev-amber',owner:'Ana V.'}],
+};
+
+function renderCal() {
+  const g = document.getElementById('calGrid');
+  g.innerHTML = '';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{
+    const el=document.createElement('div');el.className='cal-daylabel';el.textContent=d;g.appendChild(el);
+  });
+  // July 2026 starts Wednesday (offset 2)
+  for(let i=0;i<2;i++){const b=document.createElement('div');b.className='cal-day empty';g.appendChild(b);}
+  for(let d=1;d<=31;d++){
+    const cell=document.createElement('div');
+    cell.className='cal-day'+(d===26?' today':'');
+    const num=document.createElement('div');num.className='cal-daynum';num.textContent=d;cell.appendChild(num);
+    if(CAL_DATA[d]) CAL_DATA[d].forEach(ev=>{
+      const tag=document.createElement('div');tag.className='cal-ev '+ev.type;
+      tag.title=ev.owner;tag.textContent=ev.label;cell.appendChild(tag);
+    });
+    cell.onclick=()=>{ if(CAL_DATA[d]) alert('Events on Jul '+d+':\n'+CAL_DATA[d].map(e=>e.label+' ('+e.owner+')').join('\n')); };
+    g.appendChild(cell);
+  }
+}
+
+// ══════════════════════
+// ROOMS
+// ══════════════════════
+const ROOMS = [
+  {name:'Main Hall',cap:100,features:'Stage · AV · Projector · Hybrid',bookings:{2:'18:00–20:30'}},
+  {name:'Seminar Room A',cap:30,features:'Whiteboard · Projector',bookings:{}},
+  {name:'Seminar Room B',cap:20,features:'Whiteboard',bookings:{2:'17:00–19:00'}},
+  {name:'Workshop Space',cap:40,features:'Movable tables · AV',bookings:{}},
+  {name:'Boardroom',cap:12,features:'VC · Whiteboard',bookings:{}},
+  {name:'Terrace',cap:80,features:'Outdoor · standing only',bookings:{2:'19:00–21:00'}},
+];
+
+function updateRooms(){
+  const d=document.getElementById('roomDate').value;
+  const t=document.getElementById('roomTime').value;
+  const parts=d.split('-');
+  document.getElementById('roomDateLabel').textContent=`${parts[2]} ${['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+parts[1]]} ${parts[0]}, ${t}`;
+  renderRooms();
+}
+
+function renderRooms(){
+  const dayNum=parseInt((document.getElementById('roomDate')||{}).value?.split('-')[2]||'2');
+  const g=document.getElementById('roomsGrid');
+  if(!g) return;
+  g.innerHTML='';
+  ROOMS.forEach(r=>{
+    const taken=r.bookings[dayNum];
+    const c=document.createElement('div');
+    c.className='room-card '+(taken?'taken':'free');
+    c.innerHTML=`<div class="room-name">${r.name}</div><div class="room-cap">Capacity: ${r.cap} · ${r.features}</div>
+    <div class="room-status">${taken?'✗ Booked':'✓ Available'}</div>
+    ${taken?`<div class="room-booking">${taken}</div>`:''}`;
+    g.appendChild(c);
+  });
+}
+
+// ══════════════════════
+// INTAKE / SCORING
+// ══════════════════════
+const DEADLINES={speaker:'3 days before',panel:'5 days before',hackathon:'7 days before',social:'2 days before',reading:'1 day before',other:'3 days before'};
+
+function updateDeadline(){
+  const t=document.getElementById('i-type').value;
+  const hint=document.getElementById('deadline-hint');
+  if(!t){hint.style.display='none';return;}
+  const d=document.getElementById('i-date').value;
+  hint.style.display='block';
+  hint.textContent=`📅 Recommended registration deadline: ${DEADLINES[t]}. ${d?'Set the date above accordingly.':'Set the event date to auto-calculate.'}`;
+  if(d){
+    const dt=new Date(d);
+    const offsets={speaker:3,panel:5,hackathon:7,social:2,reading:1,other:3};
+    dt.setDate(dt.getDate()-offsets[t]);
+    document.getElementById('i-reg').value=dt.toISOString().split('T')[0];
+  }
+}
+
+function checkConflict(){
+  const d=parseInt(document.getElementById('i-date').value?.split('-')[2]||'0');
+  const warn=document.getElementById('conflict-warn');
+  warn.style.display=(CAL_DATA[d]&&CAL_DATA[d].length)?'flex':'none';
+}
+
+function calcScore(){
+  const topics=Array.from(document.querySelectorAll('input[name=topic]:checked')).map(c=>c.value);
+  const aud=(document.querySelector('input[name=aud]:checked')||{}).value||'';
+  const why=document.getElementById('i-why')?.value||'';
+  const prev=(document.querySelector('input[name=prev]:checked')||{}).value||'';
+
+  let tScore=0;
+  if(topics.includes('alignment')||topics.includes('interp')) tScore=4;
+  else if(topics.includes('governance')||topics.includes('community')) tScore=3;
+  else if(topics.includes('adjacent')) tScore=1;
+
+  const audMap={researchers:3,policy:3,students:2,mixed:2};
+  const aScore=audMap[aud]||0;
+
+  const wScore=why.length>120?3:why.length>50?2:why.length>15?1:0;
+  const pScore=prev==='yes'?1:0;
+
+  const total=Math.min(tScore+aScore+wScore+pScore,10);
+
+  setScoreBar('topic',tScore,4);
+  setScoreBar('aud',aScore,3);
+  setScoreBar('why',wScore,3);
+  setScoreBar('prev',pScore,1);
+
+  document.getElementById('score-total').textContent=total;
+  const v=document.getElementById('score-verdict');
+  if(tScore+aScore+wScore+pScore===0){v.textContent='Awaiting input';v.style.cssText='background:#f3f4f6;color:var(--ink-mid)';}
+  else if(total>=8){v.textContent='✓ Strong fit — accept';v.style.cssText='background:var(--green-s);color:var(--green)';}
+  else if(total>=5){v.textContent='⚠ Review with team';v.style.cssText='background:var(--amber-s);color:var(--amber)';}
+  else{v.textContent='✗ Decline';v.style.cssText='background:var(--red-s);color:var(--red)';}
+}
+
+function setScoreBar(k,v,max){
+  document.getElementById('sb-'+k).style.width=(v/max*100)+'%';
+  document.getElementById('sv-'+k).textContent=v+'/'+max;
+}
+
+function intakeNext(){document.getElementById('intake-s1').style.display='none';document.getElementById('intake-s2').style.display='block';document.getElementById('sd1').className='step-dot done';document.getElementById('sd2').className='step-dot active';document.getElementById('sl1').className='step-line done';}
+function intakeBack(){document.getElementById('intake-s2').style.display='none';document.getElementById('intake-s1').style.display='block';document.getElementById('sd1').className='step-dot active';document.getElementById('sd2').className='step-dot';document.getElementById('sl1').className='step-line';}
+function intakeDone(){document.getElementById('intake-s2').style.display='none';document.getElementById('intake-s3').style.display='block';document.getElementById('sd2').className='step-dot done';document.getElementById('sd3').className='step-dot done';document.getElementById('sl2').className='step-line done';}
+function intakeReset(){['s2','s3'].forEach(s=>document.getElementById('intake-'+s).style.display='none');document.getElementById('intake-s1').style.display='block';['sd1','sd2','sd3'].forEach((s,i)=>document.getElementById(s).className='step-dot'+(i===0?' active':''));['sl1','sl2'].forEach(s=>document.getElementById(s).className='step-line');document.getElementById('sd1').className='step-dot active';}
+
+// ══════════════════════
+// CHECKLIST
+// ══════════════════════
+const TASKS = {
+  speaker:[
+    {phase:'2+ weeks before',items:[
+      {t:'Assign event owner',approval:false},
+      {t:'Confirm date in shared calendar + check rooms',approval:false},
+      {t:'Book room — confirm with building manager',approval:true,ap:'Ops Lead sign-off required'},
+      {t:'Confirm AV setup with supplier',approval:false},
+      {t:'Confirm speaker travel / logistics',approval:false},
+    ]},
+    {phase:'1 week before',items:[
+      {t:'Arrange catering / refreshments',approval:true,ap:'Budget approval if >£150'},
+      {t:'Publish marketing: LinkedIn, Luma, newsletter',approval:false},
+      {t:'Send invitations — open sign-ups',approval:false},
+      {t:'Set registration deadline in Luma',approval:false},
+    ]},
+    {phase:'Day of event',items:[
+      {t:'Print / prepare badges',approval:false},
+      {t:'Set up room and test AV (2h before)',approval:false},
+      {t:'Brief door team / volunteers',approval:false},
+    ]},
+    {phase:'After the event',items:[
+      {t:'Reset and clean room',approval:false},
+      {t:'Send thank-you email to speaker',approval:false},
+      {t:'Post LinkedIn recap',approval:false},
+      {t:'Complete internal debrief form',approval:false},
+    ]},
+  ],
+  social:[
+    {phase:'2+ weeks before',items:[
+      {t:'Assign event owner',approval:false},
+      {t:'Book room / space — confirm capacity',approval:true,ap:'Ops Lead sign-off required'},
+      {t:'Agree theme / format',approval:false},
+    ]},
+    {phase:'1 week before',items:[
+      {t:'Arrange drinks / catering',approval:true,ap:'Budget approval if >£200'},
+      {t:'Publish event: Luma + Slack community',approval:false},
+      {t:'Set registration deadline',approval:false},
+    ]},
+    {phase:'Day of event',items:[
+      {t:'Set up room — mixer layout',approval:false},
+      {t:'Brief volunteers (door, catering)',approval:false},
+    ]},
+    {phase:'After the event',items:[
+      {t:'Clean up — fully reset room',approval:false},
+      {t:'Send attendee feedback QR link',approval:false},
+      {t:'Log attendance vs expected',approval:false},
+      {t:'Post recap on LinkedIn',approval:false},
+    ]},
+  ],
+  hackathon:[
+    {phase:'3+ weeks before',items:[
+      {t:'Assign event owner',approval:false},
+      {t:'Book room — full day',approval:true,ap:'Ops Lead + Programme Lead sign-off'},
+      {t:'Confirm AV + breakout space needs',approval:false},
+      {t:'Arrange judging panel (if applicable)',approval:false},
+      {t:'Set registration deadline: 7 days before',approval:false},
+    ]},
+    {phase:'1 week before',items:[
+      {t:'Confirm all registrants',approval:false},
+      {t:'Arrange full-day catering',approval:true,ap:'Budget approval required'},
+      {t:'Prepare judging criteria / materials',approval:false},
+      {t:'Publish on LinkedIn, Luma, newsletter',approval:false},
+    ]},
+    {phase:'Day of event',items:[
+      {t:'Set up room: tables, power strips, AV',approval:false},
+      {t:'Brief all volunteers',approval:false},
+    ]},
+    {phase:'After the event',items:[
+      {t:'Full room reset + clean',approval:false},
+      {t:'Share outcomes / write-up on LinkedIn',approval:false},
+      {t:'Send attendee + organiser feedback forms',approval:false},
+      {t:'Debrief form + consider for success stories',approval:false},
+    ]},
+  ],
+  reading:[
+    {phase:'1 week before',items:[
+      {t:'Assign owner / facilitator',approval:false},
+      {t:'Book seminar room',approval:false},
+      {t:'Share paper / reading list',approval:false},
+      {t:'Post in community Slack',approval:false},
+    ]},
+    {phase:'Day of',items:[
+      {t:'Set up room',approval:false},
+      {t:'Prepare discussion questions',approval:false},
+    ]},
+    {phase:'After',items:[
+      {t:'Reset room',approval:false},
+      {t:'Log notes / key takeaways',approval:false},
+    ]},
+  ],
+};
+
+let clState = {};
+
+function openChecklist(name, type, pct){
+  document.getElementById('cl-title').textContent = name;
+  document.getElementById('cl-sub').textContent = 'Click any step to mark complete — approvals are flagged inline';
+  const tasks=TASKS[type]||TASKS.speaker;
+  const allItems=tasks.flatMap(p=>p.items);
+  const doneCount=Math.round((pct/100)*allItems.length);
+  if(!clState[name]){
+    clState[name]={};
+    allItems.forEach((it,i)=>clState[name][it.t]=i<doneCount);
+  }
+  const body=document.getElementById('cl-body');
+  body.innerHTML='';
+  tasks.forEach(phase=>{
+    const ph=document.createElement('div');ph.className='cl-phase';ph.textContent=phase.phase;body.appendChild(ph);
+    phase.items.forEach(item=>{
+      const row=document.createElement('label');
+      row.className='cl-item'+(clState[name][item.t]?' done':'');
+      const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!clState[name][item.t];
+      cb.onchange=()=>{clState[name][item.t]=cb.checked;row.className='cl-item'+(cb.checked?' done':'');};
+      const meta=document.createElement('div');meta.className='cl-item-meta';
+      meta.innerHTML=item.t+(item.approval?`<span class="cl-approval">⚠ ${item.ap}</span>`:'');
+      row.appendChild(cb);row.appendChild(meta);body.appendChild(row);
+    });
+  });
+  document.getElementById('clOverlay').classList.add('open');
+}
+
+// ══════════════════════
+// TEAM
+// ══════════════════════
+const TEAM = [
+  {name:'Priya S.',role:'Events Lead',events:['Mech Interp Talk','Speaker: FHI'],load:75},
+  {name:'Lena K.',role:'Community',events:['Women in AI Social','Speaker: FHI'],load:60},
+  {name:'Tom B.',role:'Operations',events:['Reading Group','Mixer'],load:45},
+  {name:'Ana V.',role:'Comms',events:['Safety Workshop','Panel: Evals'],load:55},
+  {name:'Raj P.',role:'Research',events:[],load:10},
+];
+
+function renderTeam(){
+  const g=document.getElementById('teamGrid');
+  g.innerHTML='';
+  TEAM.forEach(m=>{
+    const c=document.createElement('div');c.className='team-card';
+    const loadClass=m.load>=70?'load-high':m.load>=40?'load-med':'load-low';
+    c.innerHTML=`<div class="team-name">${m.name}</div><div class="team-role">${m.role}</div>
+    <div class="team-events">${m.events.length?m.events.map(e=>`<div class="team-ev-tag">${e}</div>`).join(''):'<span class="small muted">No events assigned</span>'}</div>
+    <div class="team-load"><div class="team-load-label">Load: ${m.load}%</div><div class="load-bar"><div class="load-fill ${loadClass}" style="width:${m.load}%"></div></div></div>`;
+    g.appendChild(c);
+  });
+}
+
+// ══════════════════════
+// BUDGET
+// ══════════════════════
+const BUDGET_EVENTS = [
+  {name:'Mech Interp Talk',budget:600,spent:520,items:[{l:'AV setup',a:120},{l:'Refreshments',a:280},{l:'Speaker dinner',a:120}]},
+  {name:'Women in AI Social',budget:500,spent:180,items:[{l:'Drinks',a:120},{l:'Snacks',a:60}]},
+  {name:'AI Gov Reading Group',budget:100,spent:0,items:[]},
+  {name:'Governance Hackathon',budget:1200,spent:1340,items:[{l:'Catering (full day)',a:800},{l:'AV',a:200},{l:'Printing',a:180},{l:'Prizes',a:160}]},
+];
+
+function renderBudget(){
+  const c=document.getElementById('budgetTable');
+  c.innerHTML='';
+  BUDGET_EVENTS.forEach(ev=>{
+    const pct=Math.round(ev.spent/ev.budget*100);
+    const over=ev.spent>ev.budget;
+    const row=document.createElement('div');
+    row.innerHTML=`<div class="budget-row">
+      <div class="budget-item"><strong>${ev.name}</strong></div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="prog" style="width:160px;"><div class="prog-bar"><div class="prog-fill" style="width:${Math.min(pct,100)}%;background:${over?'var(--red)':pct>80?'var(--amber)':'var(--accent)'}"></div></div><div class="prog-pct">${pct}%</div></div>
+        <span class="mono small ${over?'br':''}">£${ev.spent} / £${ev.budget}</span>
+        <span class="badge ${over?'br':pct>80?'ba':'bg'}">${over?'⚠ Over budget':pct>80?'Near limit':'On track'}</span>
+        <button class="btn btn-ghost btn-sm" onclick="openBudgetModal('${ev.name}')">Detail</button>
+      </div>
+    </div>`;
+    c.appendChild(row);
+  });
+}
+
+function openBudgetModal(name){
+  const ev=BUDGET_EVENTS.find(e=>e.name===name)||{name,budget:0,spent:0,items:[]};
+  document.getElementById('bm-title').textContent='Budget — '+name;
+  const body=document.getElementById('bm-body');
+  const over=ev.spent>ev.budget;
+  body.innerHTML=`<div class="budget-summary" style="margin-bottom:14px;">
+    <div class="budget-sum-item"><div class="budget-sum-label">Budget</div><div class="budget-sum-val">£${ev.budget}</div></div>
+    <div class="budget-sum-item"><div class="budget-sum-label">Spent</div><div class="budget-sum-val" style="color:${over?'var(--red)':'var(--green)'}">£${ev.spent}</div></div>
+    <div class="budget-sum-item"><div class="budget-sum-label">Remaining</div><div class="budget-sum-val">£${ev.budget-ev.spent}</div></div>
+  </div>
+  ${ev.items.length?`<table class="tbl"><thead><tr><th>Line item</th><th>Amount</th></tr></thead><tbody>${ev.items.map(i=>`<tr><td>${i.l}</td><td class="mono">£${i.a}</td></tr>`).join('')}</tbody></table>`:'<div class="small muted">No spend logged yet.</div>'}
+  <div class="btn-row"><button class="btn btn-ghost btn-sm" onclick="closeModal('budgetOverlay')">Close</button></div>`;
+  document.getElementById('budgetOverlay').classList.add('open');
+}
+
+// ══════════════════════
+// TEMPLATES
+// ══════════════════════
+let curTmplType='speaker';
+
+const TEMPLATES = {
+  speaker:{
+    linkedin:`🔬 We're hosting [SPEAKER NAME] from [ORGANISATION] at LISA this [DAY].
+
+[SPEAKER] will be speaking on: [TOPIC]
+
+This is a must-attend for anyone working in or curious about AI safety — whether you're a researcher, policymaker, or just getting started.
+
+📅 [DATE], [TIME]
+📍 LISA, London
+🎟 Free. Register via Luma (link in comments)
+
+[#AISafety #LondonAI #LISA #MachineLearning]`,
+    luma:`Event title: [SPEAKER NAME] — [TALK TITLE]
+
+About this event:
+[2–3 sentence description of the talk and why it matters for AI safety]
+
+About the speaker:
+[SHORT BIO]
+
+Who should come:
+This talk is aimed at [AUDIENCE]. No prior technical knowledge required / Some familiarity with [TOPIC] is helpful.
+
+Details:
+📅 [DATE]
+⏰ Doors [TIME-30min], talk starts [TIME]
+📍 LISA, [FULL ADDRESS]
+🎟 Free. Registration closes [REG CLOSE DATE].
+
+Hosted by LISA — London Initiative for Safe AI.`,
+    newsletter:`**This week at LISA:** [SPEAKER NAME], [ORGANISATION]
+
+[SPEAKER] will be speaking on [TOPIC] on [DATE] at [TIME].
+
+[1–2 sentences on why this is relevant to LISA's community.]
+
+→ Register: [LUMA LINK]
+Registration closes [DATE]. Spaces limited.`,
+    thankyou:`Subject: Thank you — [EVENT NAME]
+
+Hi [SPEAKER / ORGANISER NAME],
+
+Thank you so much for joining us at LISA [yesterday / on DATE]. [EVENT NAME] was a really valuable evening — [one specific thing that went well or was interesting].
+
+We'd love to have you back. If you're open to it, we'd be glad to stay in touch about future events.
+
+[If sharing recording:] A recording of the talk will be shared via [CHANNEL] in the next few days.
+
+Best,
+[YOUR NAME]
+LISA Events`,
+    inprogress:`Subject: Event in progress — [DATE]
+
+Hi all,
+
+Quick update on today's event:
+
+✅ [EVENT NAME] — [STATUS]
+Owner: [NAME] | Attendees expected: [N] | Room: [ROOM]
+
+Status of open tasks:
+- [TASK 1]: ✅ done
+- [TASK 2]: ⚠ in progress
+- [TASK 3]: ❌ not started
+
+Action needed: [ANY BLOCKERS]
+
+—
+LISA Events Ops · Auto-generated [TIME]`
+  },
+  social:{
+    linkedin:`🤝 Calling all women in AI safety — our next social mixer is happening at LISA on [DATE].
+
+A relaxed evening to connect, share what you're working on, and meet others in the London AI safety community.
+
+No agenda, no presentations — just good conversation.
+
+📅 [DATE], [TIME]
+📍 LISA, London
+🎟 Free. Limited places — register via Luma (link in comments).
+
+[#WomenInAI #AISafety #LISA #LondonAI]`,
+    luma:`Event title: [EVENT NAME] — LISA Social Mixer
+
+About this event:
+A relaxed social evening for [AUDIENCE DESCRIPTION]. Come and meet others working in and around AI safety in London.
+
+Format:
+Informal — drinks and conversation. No talks or presentations.
+
+Who should come:
+[DESCRIPTION]
+
+Details:
+📅 [DATE]
+⏰ [TIME]–[END TIME]
+📍 LISA, [FULL ADDRESS]
+🎟 Free. Registration closes [DATE].`,
+    newsletter:`**Social: [EVENT NAME]**
+
+Joining us on [DATE] for an informal evening — drinks, conversation, and good company.
+
+→ Register: [LUMA LINK]`,
+    thankyou:`Subject: Great to see you — [EVENT NAME]
+
+Hi all,
+
+Thanks for coming to [EVENT NAME] at LISA — it was a brilliant evening.
+
+If you'd like to stay connected with the LISA community, join our Slack: [LINK]
+
+See you at the next one.
+
+LISA Team`,
+    inprogress:`Subject: Tonight's social — [DATE]
+
+Hi team,
+
+Quick check-in ahead of this evening:
+
+✅ Room set up: [Y/N]
+✅ Drinks / catering confirmed: [Y/N]  
+⚠ Sign-ups: [N] registered, capacity [MAX]
+
+Volunteers on the door tonight: [NAMES]
+
+—
+LISA Events Ops`
+  },
+  hackathon:{
+    linkedin:`🛠 LISA is hosting a [TOPIC] Hackathon — and we want you there.
+
+[1–2 sentences on the challenge / theme]
+
+Whether you're a researcher, developer, or policy person, there's a team for you.
+
+📅 [DATE], [START TIME]–[END TIME]
+📍 LISA, London
+🎟 Free. Registration closes [DATE] — apply via Luma.
+
+[#AISafety #Hackathon #LISA]`,
+    luma:`Event title: [HACKATHON NAME] — LISA
+
+About this event:
+[2–3 sentence overview of the challenge and what participants will work on]
+
+Format:
+Teams of [N]. [Morning/Full day]. Presentations and judging at [TIME]. Prizes: [IF APPLICABLE]
+
+Who should apply:
+[AUDIENCE / SKILLS NEEDED]
+
+Details:
+📅 [DATE]
+⏰ [START TIME]–[END TIME]
+📍 LISA, [FULL ADDRESS]
+🎟 Free. Catering provided. Registration closes [DATE].`,
+    newsletter:`**[HACKATHON NAME] — [DATE]**
+
+A day-long hackathon on [TOPIC]. Apply by [DATE].
+
+→ Register: [LUMA LINK]`,
+    thankyou:`Subject: [HACKATHON NAME] — thank you and next steps
+
+Hi [NAME / team],
+
+What a day! Thank you for taking part in [HACKATHON NAME] at LISA.
+
+[Optional: congratulations to winning team / results]
+
+We'll share a write-up shortly. If you'd like to stay involved with LISA's work, join our community: [LINK]
+
+LISA Team`,
+    inprogress:`Subject: Hackathon in progress — [DATE]
+
+Hi team,
+
+Status update — [TIME]:
+
+✅ Teams checked in: [N / TOTAL]
+✅ Catering on site: [Y/N]
+⚠ AV: [STATUS]
+Judging starts: [TIME]
+
+Action needed: [ANY ISSUES]
+
+—
+LISA Events Ops`
+  },
+  reading:{
+    linkedin:`📖 LISA Reading Group — [DATE]
+
+This week: [PAPER / BOOK TITLE] by [AUTHOR(S)]
+
+[1 sentence on why this matters]
+
+Open to all. Bring your thoughts — familiarity with the paper helps but isn't required.
+
+📅 [DATE], [TIME]
+📍 LISA, London · [ROOM]
+RSVP in the comments or via our Slack.`,
+    luma:`Event title: LISA Reading Group — [PAPER TITLE]
+
+About:
+LISA's weekly reading group. This week we're discussing [PAPER / CHAPTER] by [AUTHOR].
+
+[1–2 sentences on the paper's relevance to AI safety]
+
+Format:
+~90 min. Facilitated discussion. Reading in advance is encouraged.
+
+📅 [DATE], [TIME]
+📍 LISA, Seminar Room [X]
+🎟 Free. RSVP helpful but not required.`,
+    newsletter:`**Reading group: [PAPER TITLE]**
+[DATE], [TIME] · LISA Seminar Room [X]
+→ [RSVP LINK]`,
+    thankyou:`Subject: Reading group notes — [PAPER TITLE]
+
+Hi all,
+
+Thanks for a great session on [DATE]. Key themes from the discussion: [BRIEF NOTES]
+
+Next week: [NEXT PAPER / TBC]
+
+LISA`,
+    inprogress:`Subject: Reading group tonight — [DATE]
+
+Room [X] is booked from [TIME]. [N] RSVPs received.
+Facilitator: [NAME]
+Paper: [TITLE]
+
+—`
+  },
+};
+
+function setTmplEvent(type){
+  curTmplType=type;
+  document.querySelectorAll('#tmplEventPicker .btn').forEach(b=>{
+    b.className=b.textContent.toLowerCase().includes(type.split('_')[0])?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';
+  });
+  showTmpl(document.querySelector('.tmpl-tab.active')?.dataset?.key||'linkedin', document.querySelector('.tmpl-tab.active'));
+}
+
+function showTmpl(key, btn){
+  if(btn){
+    document.querySelectorAll('.tmpl-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    if(btn.dataset) btn.dataset.key=key;
+  }
+  const tmpl=(TEMPLATES[curTmplType]||TEMPLATES.speaker)[key]||'Template not yet available.';
+  document.getElementById('tmplContent').innerHTML=`<div class="tmpl-box">${escHtml(tmpl)}</div>`;
+}
+
+document.querySelectorAll('.tmpl-tab').forEach((t,i)=>{
+  const keys=['linkedin','luma','newsletter','thankyou','inprogress'];
+  t.dataset.key=keys[i];
+  t.onclick=function(){showTmpl(keys[i],this);};
+});
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\[([^\]]+)\]/g,'<span class="tmpl-placeholder">[$1]</span>');}
+
+function copyTemplate(){
+  const box=document.querySelector('.tmpl-box');
+  if(box) navigator.clipboard?.writeText(box.innerText).then(()=>alert('Copied!')).catch(()=>{});
+}
+
+// ══════════════════════
+// SUCCESS STORIES
+// ══════════════════════
+const STORIES = [
+  {title:'Anthropic x LISA — Interpretability Deep Dive',date:'Mar 2026',type:'Speaker',att:72,rating:5,
+   tags:['Full house','No AV issues','Strong LinkedIn engagement','Repeat speaker confirmed'],
+   replicate:'3-week lead time · Send newsletter 10 days before · Book main hall · Wine + cheese worked well'},
+  {title:'Women in AI Safety Social — Spring Edition',date:'Apr 2026',type:'Social mixer',att:48,rating:5,
+   tags:['High attendance','Great atmosphere','Strong sign-up rate','Good diversity of attendees'],
+   replicate:'Co-promote with Anita Borg + Women in ML communities · 6pm start works better than 7pm · Self-serve drinks bar, not table service'},
+  {title:'AI Governance Hackathon — Policy Track',date:'Feb 2026',type:'Hackathon',att:38,rating:4,
+   tags:['Good team diversity','Strong outputs','Judges praised structure'],
+   replicate:'2 facilitators per 10 participants · Catered lunch keeps energy up · 4h sprint + 30min presentations is right ratio'},
+];
+
+function renderStories(){
+  const c=document.getElementById('storiesContainer');
+  c.innerHTML='';
+  STORIES.forEach(s=>{
+    const d=document.createElement('div');d.className='story-card';
+    d.innerHTML=`<div class="story-title">${s.title}</div>
+    <div class="story-meta">${s.date} · ${s.type} · ${s.att} attendees · ${'★'.repeat(s.rating)}${'☆'.repeat(5-s.rating)}</div>
+    <div class="story-tags">${s.tags.map(t=>`<span class="badge bg">${t}</span>`).join('')}</div>
+    <div class="story-repl">🔁 Replicate: ${s.replicate}</div>`;
+    c.appendChild(d);
+  });
+}
+
+// ══════════════════════
+// DIGEST
+// ══════════════════════
+function renderDigest(){
+  document.getElementById('digestContent').innerHTML=`<div class="digest-hd">LISA Events · Daily Digest · Friday 26 Jun 2026 · 17:30</div>
+
+<div class="digest-section">── THIS WEEK ──────────────────</div>
+Events held: 3 &nbsp;|&nbsp; Avg attendance: 87% capacity &nbsp;|&nbsp; Net sentiment: 4.4 / 5
+
+<div class="digest-section">── UPCOMING ────────────────────</div>
+<span class="digest-ok">✓ 02 Jul</span>  Mech Interp Talk (Priya S.) — 8/10 tasks done — <span class="digest-ok">ON TRACK</span>
+<span class="digest-warn">⚠ 07 Jul</span>  Women in AI Social (Lena K.) — 5/10 tasks done — <span class="digest-warn">NEEDS ATTENTION</span>
+        → Outstanding: catering not confirmed · marketing not published
+<span class="digest-late">✗ 10 Jul</span>  AI Gov Reading Group — 2/10 tasks done — <span class="digest-late">NO OWNER ASSIGNED</span>
+        → Action needed: assign owner immediately
+
+<div class="digest-section">── BUDGET ──────────────────────</div>
+Monthly budget: £3,000 &nbsp;|&nbsp; Committed: £2,040 &nbsp;|&nbsp; Remaining: £960
+<span class="digest-late">⚠ Governance Hackathon is £140 over budget — review required</span>
+
+<div class="digest-section">── ROOMS ────────────────────────</div>
+No double-bookings detected this week. ✓
+14 Jul: provisional conflict flagged — Main Hall requested by two orgs.
+
+<div class="digest-section">── ACTION ITEMS ─────────────────</div>
+1. Assign owner for AI Gov Reading Group (10 Jul) — urgent
+2. Lena K.: confirm catering for Women in AI Social by Mon
+3. Review Governance Hackathon budget overrun
+4. 14 Jul room conflict: resolve before end of day
+
+─────────────────────────────────
+Weekly leadership summary sends Friday 16:00 · Reply to this email to update any item`;
+}
+
+function sendDigest(){
+  alert('Daily digest sent to LISA team (6 members) at 17:30.\nWeekly leadership report scheduled for Friday 16:00.');
+}
+
+// ══════════════════════
+// FEEDBACK TABS
+// ══════════════════════
+function showFeedbackTab(id){
+  ['internal','org','attendee'].forEach(t=>document.getElementById('fb-'+t).style.display=t===id?'block':'none');
+}
+
+// ══════════════════════
+// MODALS
+// ══════════════════════
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ══════════════════════
+// KANBAN
+// ══════════════════════
+const KB_EVENTS = [
+  {id:'mech',label:'Mech Interp Talk',date:'02 Jul',type:'speaker'},
+  {id:'women',label:'Women in AI Social',date:'07 Jul',type:'social'},
+  {id:'govRG',label:'AI Gov Reading Group',date:'10 Jul',type:'reading'},
+  {id:'hack',label:'Governance Hackathon',date:'18 Jul',type:'hackathon'},
+];
+
+// Each card: {id, title, phase(label for timeline), approval?, owner?, tag(badge class + text), col}
+// col: 'todo' | 'doing' | 'review' | 'done' | 'blocked'
+const KB_CARDS = {
+  mech:[
+    {id:'m1',title:'Assign event owner',owner:'Priya S.',col:'done',tag:{c:'bg',t:'Admin'}},
+    {id:'m2',title:'Book Main Hall — confirm with building manager',owner:'Priya S.',col:'done',tag:{c:'bp',t:'Ops'},approval:'Ops Lead sign-off'},
+    {id:'m3',title:'Confirm AV setup with supplier',owner:'Priya S.',col:'done',tag:{c:'bp',t:'AV'}},
+    {id:'m4',title:'Confirm speaker travel & slides',owner:'Priya S.',col:'done',tag:{c:'bb',t:'Speaker'}},
+    {id:'m5',title:'Arrange wine + cheese for 60',owner:'Tom B.',col:'done',tag:{c:'bk',t:'Catering'},approval:'Budget approval'},
+    {id:'m6',title:'Publish LinkedIn + Luma listing',owner:'Ana V.',col:'done',tag:{c:'bb',t:'Comms'}},
+    {id:'m7',title:'Send newsletter',owner:'Ana V.',col:'done',tag:{c:'bb',t:'Comms'}},
+    {id:'m8',title:'Close registration (30 Jun)',owner:'Priya S.',col:'doing',tag:{c:'ba',t:'Admin'}},
+    {id:'m9',title:'Print badges',owner:'Tom B.',col:'todo',tag:{c:'bk',t:'Day-of'}},
+    {id:'m10',title:'Setup room + AV test (2h before)',owner:'Tom B.',col:'todo',tag:{c:'bk',t:'Day-of'}},
+  ],
+  women:[
+    {id:'w1',title:'Assign event owner',owner:'Lena K.',col:'done',tag:{c:'bg',t:'Admin'}},
+    {id:'w2',title:'Book Workshop Space',owner:'Lena K.',col:'done',tag:{c:'bp',t:'Ops'},approval:'Ops Lead sign-off'},
+    {id:'w3',title:'Co-promote with Women in ML communities',owner:'Lena K.',col:'doing',tag:{c:'bb',t:'Comms'}},
+    {id:'w4',title:'Arrange drinks + snacks for 50',owner:'Lena K.',col:'blocked',tag:{c:'bk',t:'Catering'},approval:'Budget approval — awaiting'},
+    {id:'w5',title:'Publish Luma listing',owner:'Ana V.',col:'todo',tag:{c:'bb',t:'Comms'}},
+    {id:'w6',title:'Send community Slack invite',owner:'Lena K.',col:'todo',tag:{c:'bb',t:'Comms'}},
+    {id:'w7',title:'Set registration close (04 Jul)',owner:'Lena K.',col:'todo',tag:{c:'ba',t:'Admin'}},
+    {id:'w8',title:'Print badges + set up self-serve bar',owner:'Tom B.',col:'todo',tag:{c:'bk',t:'Day-of'}},
+    {id:'w9',title:'Post-event: send QR feedback link',owner:'Ana V.',col:'todo',tag:{c:'bb',t:'Follow-up'}},
+  ],
+  govRG:[
+    {id:'g1',title:'Assign owner / facilitator',owner:'⚠ Unassigned',col:'blocked',tag:{c:'br',t:'URGENT'}},
+    {id:'g2',title:'Book Seminar Room B',owner:'TBC',col:'todo',tag:{c:'bp',t:'Ops'}},
+    {id:'g3',title:'Share paper + discussion questions',owner:'TBC',col:'todo',tag:{c:'bb',t:'Content'}},
+    {id:'g4',title:'Post in community Slack',owner:'TBC',col:'todo',tag:{c:'bb',t:'Comms'}},
+    {id:'g5',title:'Set up room on the day',owner:'TBC',col:'todo',tag:{c:'bk',t:'Day-of'}},
+    {id:'g6',title:'Log key takeaways after session',owner:'TBC',col:'todo',tag:{c:'bb',t:'Follow-up'}},
+  ],
+  hack:[
+    {id:'h1',title:'Assign event owner',owner:'Pending',col:'todo',tag:{c:'bg',t:'Admin'}},
+    {id:'h2',title:'Book Main Hall — full day',owner:'Pending',col:'todo',tag:{c:'bp',t:'Ops'},approval:'Ops Lead + Programme Lead'},
+    {id:'h3',title:'Confirm judging panel',owner:'Pending',col:'todo',tag:{c:'bb',t:'Content'}},
+    {id:'h4',title:'Set registration deadline (11 Jul)',owner:'Pending',col:'todo',tag:{c:'ba',t:'Admin'}},
+    {id:'h5',title:'Arrange full-day catering',owner:'Pending',col:'todo',tag:{c:'bk',t:'Catering'},approval:'Budget approval required'},
+    {id:'h6',title:'Publish: LinkedIn, Luma, newsletter',owner:'Pending',col:'todo',tag:{c:'bb',t:'Comms'}},
+    {id:'h7',title:'Prepare judging criteria + briefing deck',owner:'Pending',col:'todo',tag:{c:'bb',t:'Content'}},
+    {id:'h8',title:'Set up room: tables, power, AV',owner:'Pending',col:'todo',tag:{c:'bk',t:'Day-of'}},
+    {id:'h9',title:'Brief all volunteers',owner:'Pending',col:'todo',tag:{c:'bk',t:'Day-of'}},
+    {id:'h10',title:'Full room reset + clean',owner:'Pending',col:'todo',tag:{c:'bk',t:'Day-of'}},
+    {id:'h11',title:'Share outcomes write-up on LinkedIn',owner:'Pending',col:'todo',tag:{c:'bb',t:'Follow-up'}},
+    {id:'h12',title:'Debrief form + nominate for success stories',owner:'Pending',col:'todo',tag:{c:'bb',t:'Follow-up'}},
+  ],
+};
+
+let activeKbEvent = 'mech';
+let dragCard = null;
+let dragSource = null;
+
+function renderKanban(eventId) {
+  activeKbEvent = eventId;
+  // update picker buttons
+  document.querySelectorAll('.kb-event-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.eid === eventId);
+  });
+
+  const cards = KB_CARDS[eventId] || [];
+  const cols = [
+    {id:'todo',    label:'To do',      cls:'kb-col-todo'},
+    {id:'doing',   label:'In progress',cls:'kb-col-doing'},
+    {id:'review',  label:'Needs approval',cls:'kb-col-review'},
+    {id:'blocked', label:'Blocked',    cls:'kb-col-blocked'},
+    {id:'done',    label:'Done',       cls:'kb-col-done'},
+  ];
+
+  // Cards that need approval move to review col display
+  const cardsByCol = {};
+  cols.forEach(c => cardsByCol[c.id] = []);
+  cards.forEach(card => {
+    const col = card.approval && card.col !== 'done' ? 'review' : card.col;
+    cardsByCol[col] = cardsByCol[col] || [];
+    cardsByCol[col].push(card);
+  });
+
+  const area = document.getElementById('kb-board-area');
+  area.innerHTML = '';
+  const board = document.createElement('div');
+  board.className = 'kb-board';
+
+  cols.forEach(col => {
+    const colCards = cardsByCol[col.id] || [];
+    const colEl = document.createElement('div');
+    colEl.className = `kb-col ${col.cls}`;
+    colEl.dataset.col = col.id;
+    colEl.innerHTML = `<div class="kb-col-head">
+      <span class="kb-col-title">${col.label}</span>
+      <span class="kb-col-count">${colCards.length}</span>
+    </div>`;
+
+    const body = document.createElement('div');
+    body.className = 'kb-col-body';
+    body.dataset.col = col.id;
+
+    // drag-over target
+    body.addEventListener('dragover', e => { e.preventDefault(); body.style.background = 'var(--accent-soft)'; });
+    body.addEventListener('dragleave', () => { body.style.background = ''; });
+    body.addEventListener('drop', e => {
+      e.preventDefault();
+      body.style.background = '';
+      if (dragCard && dragSource !== col.id) {
+        const cardData = cards.find(c => c.id === dragCard);
+        if (cardData) { cardData.col = col.id; if(cardData.approval && col.id!=='done') cardData.col = col.id; }
+        renderKanban(activeKbEvent);
+      }
+    });
+
+    colCards.forEach(card => {
+      const el = document.createElement('div');
+      el.className = 'kb-card';
+      el.draggable = true;
+      el.dataset.cid = card.id;
+      el.innerHTML = `<div class="kb-card-title">${card.title}</div>
+        <div class="kb-card-meta"><span class="badge ${card.tag.c}">${card.tag.t}</span></div>
+        ${card.approval ? `<div class="kb-card-approval">⚠ ${card.approval}</div>` : ''}
+        <div class="kb-card-owner">👤 ${card.owner}</div>`;
+      el.addEventListener('dragstart', () => { dragCard = card.id; dragSource = col.id; el.classList.add('dragging'); });
+      el.addEventListener('dragend', () => { el.classList.remove('dragging'); dragCard = null; });
+      body.appendChild(el);
+    });
+
+    const addBtn = document.createElement('div');
+    addBtn.className = 'kb-add-btn';
+    addBtn.innerHTML = '+ Add task';
+    addBtn.onclick = () => {
+      const title = prompt('New task:');
+      if (title) {
+        KB_CARDS[eventId].push({id:'new'+Date.now(), title, owner:'Unassigned', col:col.id, tag:{c:'bk',t:'Task'}});
+        renderKanban(activeKbEvent);
+      }
+    };
+
+    colEl.appendChild(body);
+    colEl.appendChild(addBtn);
+    board.appendChild(colEl);
+  });
+
+  area.appendChild(board);
+}
+
+function initKanbanPicker() {
+  const picker = document.getElementById('kb-picker');
+  picker.innerHTML = '';
+  KB_EVENTS.forEach(ev => {
+    const btn = document.createElement('button');
+    btn.className = 'kb-event-btn' + (ev.id === activeKbEvent ? ' active' : '');
+    btn.dataset.eid = ev.id;
+    btn.innerHTML = `${ev.label} <span style="font-family:var(--mono);font-size:10px;opacity:.6;margin-left:4px;">${ev.date}</span>`;
+    btn.onclick = () => renderKanban(ev.id);
+    picker.appendChild(btn);
+  });
+  renderKanban(activeKbEvent);
+}
+
+// ══════════════════════
+// EVENT BIBLES
+// ══════════════════════
+const BIBLE_DATA = {
+  speaker: {
+    summary: 'For visiting speaker talks. Typical lead time: 3 weeks. Typical size: 30–80. Reg closes: 3 days before.',
+    phases: [
+      { label: '3+ weeks before', color: '#7c3aed', timing: 'Week –3', tasks: [
+        { icon: '👤', title: 'Assign event owner', note: 'One named owner per event — no owner, no event.', tags: ['owner'] },
+        { icon: '📅', title: 'Confirm date in shared calendar', note: 'Check calendar AND room map before accepting.', tags: ['owner'] },
+        { icon: '🔗', title: 'Initiate speaker comms', note: 'Confirm topic, format, duration, and any slides or recordings needed.', tags: ['owner','comms'] },
+      ]},
+      { label: '2 weeks before', color: '#4f46e5', timing: 'Week –2', tasks: [
+        { icon: '🏛', title: 'Book room — confirm with building manager', note: 'For >50 attendees, written confirmation required.', tags: ['owner','ops','approval'] },
+        { icon: '🎤', title: 'Confirm AV requirements with supplier', note: 'Mic, projector, recording, hybrid setup. Supplier: [AV CONTACT].', tags: ['owner','supplier'] },
+        { icon: '🍷', title: 'Arrange catering / refreshments', note: 'Default: wine + soft drinks + cheese for speaker talks. Budget: £[X]. Supplier: [CATERING CONTACT].', tags: ['owner','supplier','approval'] },
+        { icon: '✉️', title: 'Confirm speaker logistics', note: 'Travel, dietary requirements, presentation format, any guest introductions needed.', tags: ['owner','comms'] },
+      ]},
+      { label: '1 week before', color: '#2563eb', timing: 'Week –1', tasks: [
+        { icon: '📣', title: 'Publish LinkedIn post', note: 'Use Comms Templates → LinkedIn. Tag speaker org if possible.', tags: ['comms'] },
+        { icon: '🔖', title: 'Create Luma listing + open sign-ups', note: 'Set capacity limit. Set registration deadline: 3 days before event.', tags: ['comms'] },
+        { icon: '📧', title: 'Send newsletter feature', note: 'Short item (2–3 sentences) in weekly newsletter.', tags: ['comms'] },
+        { icon: '💬', title: 'Post in community Slack', note: '#events channel + any relevant interest channels.', tags: ['comms'] },
+      ]},
+      { label: 'Registration close (–3 days)', color: '#d97706', timing: 'T–3 days', tasks: [
+        { icon: '🚫', title: 'Close registration', note: 'Check final numbers against room capacity. Communicate waitlist if oversubscribed.', tags: ['owner'] },
+        { icon: '🎟', title: 'Prepare badge list', note: 'Export attendee list from Luma. Print badges.', tags: ['owner','ops'] },
+      ]},
+      { label: 'Day before', color: '#d97706', timing: 'T–1', tasks: [
+        { icon: '📧', title: 'Send reminder email to registered attendees', note: 'Include address, start time, and what to bring.', tags: ['comms'] },
+        { icon: '📋', title: 'Brief volunteers / door team', note: 'Share attendee list, confirm roles.', tags: ['owner'] },
+      ]},
+      { label: 'Day of event', color: '#dc2626', timing: 'Day', tasks: [
+        { icon: '🏗', title: 'Setup room (2h before start)', note: 'Theatre layout, AV test, signage, badges on table.', tags: ['ops'] },
+        { icon: '🧑‍💻', title: 'AV test with speaker', note: '30 min before doors open. Test slides, mic, recording if applicable.', tags: ['ops','supplier'] },
+        { icon: '🚪', title: 'Manage door + registration', note: 'Check names against list. Note no-shows for future planning.', tags: ['ops'] },
+        { icon: '📸', title: 'Take photos for LinkedIn', note: 'Speaker at lectern, room shot showing attendance.', tags: ['comms'] },
+      ]},
+      { label: 'After the event', color: '#16a34a', timing: 'T+24h', tasks: [
+        { icon: '🧹', title: 'Reset and clean room', note: 'Confirm with building manager that room is left as found.', tags: ['ops'] },
+        { icon: '✉️', title: 'Thank-you email to speaker', note: 'Personalised, within 24h. See Comms Templates → Thank-you.', tags: ['comms','owner'] },
+        { icon: '📣', title: 'Post LinkedIn recap', note: 'Photo + 3–5 sentence summary. Tag speaker. Within 48h of event.', tags: ['comms'] },
+        { icon: '📊', title: 'Complete internal debrief form', note: 'Attendance vs expected, AV, catering, room size, lessons.', tags: ['owner'] },
+        { icon: '🏆', title: 'Nominate for success stories if exceptional', tags: ['owner'] },
+      ]},
+    ]
+  },
+  social: {
+    summary: 'For networking and community socials. Typical lead time: 2 weeks. Typical size: 20–50. Reg closes: 2 days before.',
+    phases: [
+      { label: '2+ weeks before', color: '#7c3aed', timing: 'Week –2', tasks: [
+        { icon: '👤', title: 'Assign event owner', tags: ['owner'] },
+        { icon: '🎨', title: 'Agree theme / format and audience targeting', note: 'Is this open invite or specific community (e.g. Women in AI Safety, student-focused)?', tags: ['owner'] },
+        { icon: '🏛', title: 'Book space — confirm capacity', note: 'Mixer layout. Confirm max capacity with building manager.', tags: ['owner','ops','approval'] },
+      ]},
+      { label: '1 week before', color: '#4f46e5', timing: 'Week –1', tasks: [
+        { icon: '🍷', title: 'Arrange drinks + snacks', note: 'Self-serve bar works better than table service for mixers. Budget: £[X]. Supplier: [CONTACT].', tags: ['owner','supplier','approval'] },
+        { icon: '📣', title: 'Publish Luma listing', note: 'Casual tone. Set capacity. Set reg close: 2 days before.', tags: ['comms'] },
+        { icon: '💬', title: 'Post in community Slack + targeted partner comms', note: 'Co-promote with partner organisations if applicable (e.g. Women in ML, EA London).', tags: ['comms'] },
+      ]},
+      { label: 'Day of event', color: '#dc2626', timing: 'Day', tasks: [
+        { icon: '🏗', title: 'Set up room — mixer layout', note: 'Remove fixed seating where possible. Create natural conversation clusters.', tags: ['ops'] },
+        { icon: '🍾', title: 'Set up self-serve drinks station', note: 'Ice, glasses, soft drinks visible. Brief any catering volunteers.', tags: ['ops'] },
+        { icon: '🚪', title: 'Door team + name badges', note: 'Self-sign name badges work well for socials.', tags: ['ops'] },
+      ]},
+      { label: 'After the event', color: '#16a34a', timing: 'T+24h', tasks: [
+        { icon: '🧹', title: 'Full clean-up and room reset', note: 'Bottles, glasses, food. Confirm reset with building manager.', tags: ['ops'] },
+        { icon: '📲', title: 'Send attendee feedback QR link', note: 'Via follow-up email within 24h.', tags: ['comms'] },
+        { icon: '📊', title: 'Log attendance vs expected + debrief', tags: ['owner'] },
+        { icon: '📣', title: 'LinkedIn recap post', tags: ['comms'] },
+      ]},
+    ]
+  },
+  hackathon: {
+    summary: 'For workshops, hackathons, and full-day events. Typical lead time: 4 weeks. Typical size: 10–40. Reg closes: 7 days before.',
+    phases: [
+      { label: '4+ weeks before', color: '#7c3aed', timing: 'Week –4', tasks: [
+        { icon: '👤', title: 'Assign event owner (+ co-owner for full-day events)', tags: ['owner'] },
+        { icon: '🏛', title: 'Book Main Hall — full day', note: 'Written confirmation from building manager. CC Ops Lead.', tags: ['owner','ops','approval'] },
+        { icon: '🏆', title: 'Confirm judging panel (if applicable)', note: '3–5 judges. Brief them on criteria and format in advance.', tags: ['owner','comms'] },
+        { icon: '🎯', title: 'Define challenge theme and team structure', note: 'Teams of 3–5 work best. Define the brief clearly.', tags: ['owner'] },
+      ]},
+      { label: '3 weeks before', color: '#4f46e5', timing: 'Week –3', tasks: [
+        { icon: '📋', title: 'Open registration — set deadline: 7 days before', note: 'Application form (not just sign-up) recommended for quality control.', tags: ['owner','comms'] },
+        { icon: '🍱', title: 'Arrange full-day catering', note: 'Lunch + coffee + snacks. Budget: £[X] per head. Supplier: [CONTACT].', tags: ['owner','supplier','approval'] },
+        { icon: '🎤', title: 'Confirm AV + breakout space needs', note: 'Multiple screens, power strips at tables, whiteboard per team.', tags: ['ops','supplier'] },
+        { icon: '📣', title: 'Publish on LinkedIn, Luma, newsletter', tags: ['comms'] },
+      ]},
+      { label: 'Registration close (–7 days)', color: '#d97706', timing: 'T–7', tasks: [
+        { icon: '✅', title: 'Confirm all registered participants', note: 'Email confirmation with full agenda, what to bring, address.', tags: ['owner','comms'] },
+        { icon: '👥', title: 'Assign teams (if organisers are doing this)', note: 'Balance skills across teams. Share team assignments 3 days before.', tags: ['owner'] },
+        { icon: '📄', title: 'Prepare judging criteria + materials packet', tags: ['owner'] },
+      ]},
+      { label: 'Day of event', color: '#dc2626', timing: 'Day', tasks: [
+        { icon: '🏗', title: 'Setup: tables, power strips, AV, whiteboards', note: 'Allow 2h setup time. Test all AV.', tags: ['ops'] },
+        { icon: '🧑‍💼', title: 'Brief all volunteers and facilitators', note: '1 facilitator per 10 participants.', tags: ['owner'] },
+        { icon: '🍱', title: 'Manage catering schedule', note: 'Coffee on arrival, lunch at 13:00, afternoon snacks.', tags: ['ops'] },
+        { icon: '⏱', title: 'Keep time and manage transitions', note: '4h sprint + 30min presentations + 30min judging + prizes.', tags: ['owner'] },
+        { icon: '📸', title: 'Photo/video for LinkedIn recap', tags: ['comms'] },
+      ]},
+      { label: 'After the event', color: '#16a34a', timing: 'T+24h', tasks: [
+        { icon: '🧹', title: 'Full room reset and clean', note: 'Especially important after full-day events.', tags: ['ops'] },
+        { icon: '🏆', title: 'Announce winners and share outcomes', note: 'LinkedIn post with team summaries + winning project. Tag participants.', tags: ['comms'] },
+        { icon: '📊', title: 'Send attendee + organiser feedback forms', tags: ['comms','owner'] },
+        { icon: '📝', title: 'Internal debrief + nominate for success stories', tags: ['owner'] },
+      ]},
+    ]
+  },
+  reading: {
+    summary: 'For reading groups, paper seminars, and discussion sessions. Typical lead time: 1 week. Typical size: 5–20. Reg closes: 1 day before.',
+    phases: [
+      { label: '1 week before', color: '#4f46e5', timing: 'Week –1', tasks: [
+        { icon: '👤', title: 'Assign facilitator', note: 'The facilitator prepares 3–5 discussion questions.', tags: ['owner'] },
+        { icon: '🏛', title: 'Book Seminar Room A or B', tags: ['ops'] },
+        { icon: '📄', title: 'Share paper + reading list with attendees', note: 'Via Slack + email. Include a 2-sentence summary.', tags: ['comms'] },
+        { icon: '💬', title: 'Post in community Slack', note: 'Keep it low-key. RSVPs helpful but informal.', tags: ['comms'] },
+      ]},
+      { label: 'Day of session', color: '#dc2626', timing: 'Day', tasks: [
+        { icon: '🏗', title: 'Set up room — seminar layout', note: 'Round table or U-shape preferred.', tags: ['ops'] },
+        { icon: '📋', title: 'Facilitator: prepare discussion questions', note: 'Print or have on screen.', tags: ['owner'] },
+      ]},
+      { label: 'After the session', color: '#16a34a', timing: 'T+24h', tasks: [
+        { icon: '🧹', title: 'Reset room', tags: ['ops'] },
+        { icon: '📝', title: 'Log key takeaways in shared notes doc', note: 'Paste to Notion / Slack after each session.', tags: ['owner'] },
+        { icon: '📅', title: 'Confirm paper for next session', tags: ['owner'] },
+      ]},
+    ]
+  },
+  panel: {
+    summary: 'For panel discussions. Typical lead time: 3–4 weeks. Typical size: 40–80. Reg closes: 5 days before.',
+    phases: [
+      { label: '4 weeks before', color: '#7c3aed', timing: 'Week –4', tasks: [
+        { icon: '👤', title: 'Assign event owner and moderator', note: 'Moderator should be briefed on the topic and panellists in advance.', tags: ['owner'] },
+        { icon: '🏛', title: 'Book Main Hall or large seminar room', tags: ['owner','ops','approval'] },
+        { icon: '🎙', title: 'Confirm all panellists', note: '3–4 panellists. Confirm topic angle for each.', tags: ['owner','comms'] },
+      ]},
+      { label: '2 weeks before', color: '#4f46e5', timing: 'Week –2', tasks: [
+        { icon: '🎤', title: 'Confirm AV — panel mic setup', note: 'One mic per panellist + roving mic for Q&A.', tags: ['ops','supplier'] },
+        { icon: '📝', title: 'Share moderator brief with panellists', note: 'Key questions, format, time allocation, code of conduct.', tags: ['owner','comms'] },
+        { icon: '🍷', title: 'Arrange post-panel drinks', note: 'Reception format. Budget: £[X].', tags: ['owner','supplier','approval'] },
+        { icon: '📣', title: 'Publish LinkedIn, Luma, newsletter', tags: ['comms'] },
+      ]},
+      { label: 'Day of event', color: '#dc2626', timing: 'Day', tasks: [
+        { icon: '🏗', title: 'Setup: panel table, mics, chairs, AV', note: '2h before. Moderator and panellists run-through 30 min before doors.', tags: ['ops'] },
+        { icon: '🚪', title: 'Manage door + registration', tags: ['ops'] },
+        { icon: '📸', title: 'Capture photos + video if recording', tags: ['comms'] },
+      ]},
+      { label: 'After the event', color: '#16a34a', timing: 'T+24h', tasks: [
+        { icon: '🧹', title: 'Room reset', tags: ['ops'] },
+        { icon: '✉️', title: 'Thank-you notes to all panellists', tags: ['comms','owner'] },
+        { icon: '📣', title: 'LinkedIn recap + key quotes', note: 'Tag all panellists.', tags: ['comms'] },
+        { icon: '📊', title: 'Debrief form', tags: ['owner'] },
+      ]},
+    ]
+  },
+};
+
+const TAG_LABELS = { owner:'Owner', ops:'Ops', comms:'Comms', approval:'Needs approval', supplier:'Supplier', 'content':'Content' };
+const TAG_CLASSES = { owner:'tl-tag-owner', ops:'tl-tag-owner', comms:'tl-tag-comms', approval:'tl-tag-approval', supplier:'tl-tag-supplier', content:'tl-tag-comms' };
+
+function showBible(type, btn) {
+  if(btn) {
+    document.querySelectorAll('.bible-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const data = BIBLE_DATA[type];
+  if(!data) return;
+  const body = document.getElementById('bible-body');
+  body.innerHTML = `<div class="bible-info"><strong>${type.charAt(0).toUpperCase()+type.slice(1)} playbook</strong> — ${data.summary}</div>
+    <div class="timeline" id="tl-inner"></div>`;
+  const tl = document.getElementById('tl-inner');
+  data.phases.forEach(phase => {
+    const ph = document.createElement('div');
+    ph.className = 'tl-phase';
+    ph.style.position = 'relative';
+    ph.innerHTML = `<div class="tl-phase-head">
+      <div class="tl-dot" style="background:${phase.color};position:absolute;left:-28px;">${phase.tasks.length}</div>
+      <div class="tl-phase-label">${phase.label}</div>
+      <div class="tl-phase-timing">${phase.timing}</div>
+    </div>
+    <div class="tl-tasks">${phase.tasks.map(t => `<div class="tl-task">
+      <div class="tl-task-icon">${t.icon}</div>
+      <div class="tl-task-body">
+        <div class="tl-task-title">${t.title}</div>
+        ${t.note ? `<div class="tl-task-note">${t.note}</div>` : ''}
+        <div class="tl-task-tags">${(t.tags||[]).map(tag => `<span class="tl-tag ${TAG_CLASSES[tag]||'tl-tag-owner'}">${TAG_LABELS[tag]||tag}</span>`).join('')}</div>
+      </div>
+    </div>`).join('')}</div>`;
+    tl.appendChild(ph);
+  });
+}
+
+// ══════════════════════
+// MONTHLY RETRO
+// ══════════════════════
+const RETRO = {
+  worked: [
+    { text: '3-week lead time for speaker events gives enough buffer for marketing and logistics', event: 'Anthropic x LISA (Interpretability)' },
+    { text: 'Self-serve drinks bar significantly smoother than table service for socials', event: 'Women in AI Safety Social' },
+    { text: 'Sending newsletter feature 10 days before doubled sign-up rate vs 5 days', event: 'Multiple events' },
+    { text: 'Co-promoting with EA London and Women in ML communities reached new audience', event: 'Women in AI Safety Social' },
+    { text: '1 facilitator per 10 participants kept hackathon well-structured throughout the day', event: 'AI Governance Hackathon' },
+    { text: 'Catered lunch at hackathon visibly improved afternoon energy — strong positive feedback', event: 'AI Governance Hackathon' },
+    { text: 'Wine + cheese at speaker talks creates a natural networking buffer before the talk', event: 'FHI Speaker Evening' },
+    { text: 'QR code attendee feedback form returned 68% response rate — highest ever', event: 'Reading Group series' },
+  ],
+  didnt: [
+    { text: 'AV test was skipped for one event — speaker slides failed to load, 15-minute delay', event: 'Policy Panel, 12 Jun' },
+    { text: 'Room was left unclean after Hackathon — building manager complaint', event: 'AI Governance Hackathon' },
+    { text: 'No owner assigned for two reading groups — both nearly cancelled day-before', event: 'Reading Group, 5 Jun & 19 Jun' },
+    { text: 'LinkedIn posted after event (not before) — minimal pre-event engagement', event: 'Safety Workshop' },
+    { text: 'Catering ran out 40 minutes early for social — 50 registered, bought for 35', event: 'MATS Social, 3 Jun' },
+    { text: 'Double booking flagged only on the day — two teams arrived for Main Hall simultaneously', event: '14 Jun (resolved, but narrowly)' },
+    { text: 'No debrief form submitted for 4 out of 11 events — lessons not captured', event: 'General' },
+  ],
+  actions: [
+    { text: 'Mandatory AV test 30 min before every event with projector — add to all checklists', owner: 'Tom B.', due: '01 Jul' },
+    { text: 'Add "clean room" as a named task on every post-event checklist with sign-off', owner: 'Tom B.', due: '01 Jul' },
+    { text: 'No event goes on calendar without named owner — enforce at intake stage', owner: 'Priya S.', due: 'Ongoing' },
+    { text: 'LinkedIn post must go live at least 7 days before event — add to all bibles', owner: 'Ana V.', due: '01 Jul' },
+    { text: 'Catering orders should be based on registered + 20% buffer, not expected attendance', owner: 'Lena K.', due: '01 Jul' },
+    { text: 'All room bookings must be entered in shared calendar within 24h of acceptance', owner: 'All', due: 'Ongoing' },
+    { text: 'Debrief form to be completed within 48h of event — set automatic Slack reminder', owner: 'Priya S.', due: '01 Jul' },
+  ],
+};
+
+function renderRetro() {
+  const grid = document.getElementById('retro-grid');
+  grid.innerHTML = '';
+
+  const worked = document.createElement('div');
+  worked.className = 'retro-card worked';
+  worked.innerHTML = `<div class="retro-card-title">✓ What worked well</div>
+    ${RETRO.worked.map(i=>`<div class="retro-item"><div class="retro-dot"></div><div><div>${i.text}</div><span class="retro-event-tag">${i.event}</span></div></div>`).join('')}`;
+
+  const didnt = document.createElement('div');
+  didnt.className = 'retro-card didnt';
+  didnt.innerHTML = `<div class="retro-card-title">✗ What didn't work</div>
+    ${RETRO.didnt.map(i=>`<div class="retro-item"><div class="retro-dot"></div><div><div>${i.text}</div><span class="retro-event-tag">${i.event}</span></div></div>`).join('')}`;
+
+  grid.appendChild(worked);
+  grid.appendChild(didnt);
+
+  const actions = document.getElementById('retro-actions');
+  actions.innerHTML = `<table class="tbl"><thead><tr><th>Action</th><th>Owner</th><th>Due</th></tr></thead><tbody>
+    ${RETRO.actions.map(a=>`<tr><td>${a.text}</td><td><span class="small">${a.owner}</span></td><td><span class="mono small">${a.due}</span></td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ══════════════════════
+// EVENT FILE
+// ══════════════════════
+const EF_DATA = {
+  mech: {
+    ref:'LISA-2026-0044', title:'Mechanistic Interpretability Talk', date:'02 Jul 2026',
+    time:'18:30–20:30', type:'Speaker / Talk', owner:'Priya S.', room:'Main Hall',
+    org:'Apollo Research', attendees:'47 registered / 60 cap', status:'upcoming', statusCol:'ba',
+    statusLabel:'Upcoming',
+    description:'A talk by [Speaker Name] from Apollo Research on mechanistic interpretability approaches to understanding transformer internals. Followed by wine and cheese reception.',
+    checklistType:'speaker', checklistPct:80,
+    postmortem:{
+      pos:['Speaker confirmed 3 weeks in advance — enough buffer for marketing','Newsletter sent 10 days before: highest sign-up rate this month','Wine + cheese pre-event created natural networking before the talk'],
+      neg:['AV test not yet completed — schedule 30 min before doors','Badge list not printed — assign to Tom B. by 01 Jul'],
+      actions:['Tom B. to print badges by 01 Jul','Priya to run AV test with speaker 30 min before doors on 02 Jul','Ana to post LinkedIn recap within 48h of event']
+    },
+    orgFeedback: null,
+    attendeeFeedback: null,
+    surveyBase:'lisa-2026-0044-mech-interp',
+    cap: 60,
+    attendeeList:[
+      {id:'a001',name:'Yasmin Al-Rashid',org:'UK AISI',email:'y.alrashid@aisi.gov.uk',rsvp:'confirmed',checkedIn:false,diet:'Vegan',access:''},
+      {id:'a002',name:'Tom Whitfield',org:'Redwood Research',email:'tom@redwoodresearch.org',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'a003',name:'Priya Menon',org:'Independent',email:'priya.m@gmail.com',rsvp:'confirmed',checkedIn:false,diet:'Vegetarian',access:'Wheelchair access needed'},
+      {id:'a004',name:'Leo Strauss',org:'Apollo Research',email:'leo@apolloresearch.ai',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'a005',name:'Clara Beaumont',org:'DeepMind',email:'c.beaumont@deepmind.com',rsvp:'confirmed',checkedIn:false,diet:'Gluten-free',access:''},
+      {id:'a006',name:'Amir Hossein',org:'Oxford FHI',email:'amir.h@future.ox.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'Halal',access:''},
+      {id:'a007',name:'Sophie Tremblay',org:'MIRI',email:'stremblay@intelligence.org',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'a008',name:'James Okafor',org:'GovAI',email:'j.okafor@governance.ai',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'a009',name:'Nina Vasquez',org:'CAIS',email:'nina@safe.ai',rsvp:'waitlist',checkedIn:false,diet:'',access:''},
+      {id:'a010',name:'Marcus Holt',org:'UCL',email:'m.holt@ucl.ac.uk',rsvp:'waitlist',checkedIn:false,diet:'Vegan',access:''},
+      {id:'a011',name:'Fatima Al-Amin',org:'Anthropic',email:'f.alamin@anthropic.com',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'a012',name:'Daniel Park',org:'LSE',email:'d.park@lse.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+    ] {
+    ref:'LISA-2026-0045', title:'Women in AI Safety Social', date:'07 Jul 2026',
+    time:'18:00–20:00', type:'Social Mixer', owner:'Lena K.', room:'Workshop Space',
+    org:'LISA-led', attendees:'28 registered / 50 cap', status:'upcoming', statusCol:'ba',
+    statusLabel:'Upcoming — ⚠ catering unconfirmed',
+    description:'A relaxed social mixer for women working in or interested in AI safety. Self-serve drinks and snacks. Informal format.',
+    checklistType:'social', checklistPct:50,
+    postmortem:{
+      pos:['Co-promotion with EA London reached new audience segment'],
+      neg:['Catering not yet confirmed — blocked on budget approval','Luma listing not yet live — 10 days before is the target','Registration deadline not set'],
+      actions:['Lena to confirm catering budget and place order by 28 Jun','Ana to publish Luma + LinkedIn by 30 Jun','Lena to set registration close to 04 Jul in Luma']
+    },
+    orgFeedback: null,
+    attendeeFeedback: null,
+    surveyBase:'lisa-2026-0045-women-social',
+    cap: 50,
+    attendeeList:[
+      {id:'b001',name:'Lena Kovač',org:'LISA',email:'lena@londonaisafety.com',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'b002',name:'Rachel Huang',org:'UK AISI',email:'r.huang@aisi.gov.uk',rsvp:'confirmed',checkedIn:false,diet:'Vegan',access:''},
+      {id:'b003',name:'Amara Diallo',org:'Anthropic',email:'amara@anthropic.com',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'b004',name:'Julia Stern',org:'GovAI',email:'jstern@governance.ai',rsvp:'confirmed',checkedIn:false,diet:'Vegetarian',access:''},
+      {id:'b005',name:'Mei Lin',org:'DeepMind',email:'mei.lin@deepmind.com',rsvp:'confirmed',checkedIn:false,diet:'',access:'Hearing loop required'},
+      {id:'b006',name:'Nadia Osei',org:'Independent',email:'nadia.osei@pm.me',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'b007',name:'Priya Sharma',org:'LSE',email:'p.sharma@lse.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'Halal',access:''},
+      {id:'b008',name:'Sofia Reyes',org:'Oxford',email:'sofia.r@ox.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+    ] {
+    ref:'LISA-2026-0046', title:'AI Governance Reading Group', date:'10 Jul 2026',
+    time:'17:30–19:00', type:'Reading Group', owner:'⚠ Unassigned', room:'Seminar Room B',
+    org:'LISA-led', attendees:'12 registered / 20 cap', status:'atrisk', statusCol:'br',
+    statusLabel:'⚠ No owner — urgent',
+    description:'Weekly reading group. Paper TBC — facilitator needed to select and circulate by 03 Jul.',
+    checklistType:'reading', checklistPct:20,
+    postmortem:{
+      pos:[],
+      neg:['No owner assigned — event at risk of cancellation','Paper not yet selected or circulated','Room booking not yet confirmed'],
+      actions:['Programme Lead to assign facilitator by 27 Jun — urgent','Facilitator to select and share paper by 03 Jul','Facilitator to book Seminar Room B as soon as assigned']
+    },
+    orgFeedback: null,
+    attendeeFeedback: null,
+    surveyBase:'lisa-2026-0046-gov-rg',
+    cap: 20,
+    attendeeList:[
+      {id:'c001',name:'Tom Bauer',org:'LISA',email:'tom@londonaisafety.com',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'c002',name:'Alice Ng',org:'GovAI',email:'a.ng@governance.ai',rsvp:'confirmed',checkedIn:false,diet:'Vegan',access:''},
+      {id:'c003',name:'Raj Patel',org:'Oxford',email:'raj.p@ox.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+    ] {
+    ref:'LISA-2026-0047', title:'Governance Hackathon', date:'18 Jul 2026',
+    time:'09:00–18:00', type:'Workshop / Hackathon', owner:'Pending', room:'Main Hall (full day)',
+    org:'DeepMind / External', attendees:'0 registered / 40 cap', status:'reviewing', statusCol:'ba',
+    statusLabel:'Under review — pending acceptance',
+    description:'A full-day hackathon on AI governance policy, co-organised with DeepMind. Challenge theme TBC. Estimated 35–40 participants in teams of 4–5.',
+    checklistType:'hackathon', checklistPct:0,
+    postmortem:{ pos:[], neg:['Event not yet accepted — awaiting alignment score review'], actions:['Circulate to #events-review Slack for team decision by 28 Jun'] },
+    orgFeedback: null,
+    attendeeFeedback: null,
+    surveyBase:'lisa-2026-0047-gov-hack',
+    cap: 40,
+    attendeeList:[] {
+    ref:'LISA-2026-0041', title:'Anthropic Interpretability Deep Dive', date:'04 Jun 2026',
+    time:'18:30–21:00', type:'Speaker / Talk', owner:'Priya S.', room:'Main Hall',
+    org:'Anthropic', attendees:'72 / 80 cap', status:'complete', statusCol:'bg',
+    statusLabel:'Complete ✓',
+    description:'A deep-dive talk on interpretability research at Anthropic, followed by an extended Q&A and wine reception. One of the best-attended speaker events of the year.',
+    checklistType:'speaker', checklistPct:100,
+    postmortem:{
+      pos:['72/80 attendance — highest of the year','Speaker confirmed for follow-up event in September','Wine + cheese ran to time; no shortfall','LinkedIn post reached 4,200 impressions — best performing post this quarter','AV flawless — test 30 min before made the difference'],
+      neg:['Room slightly warm by end — check AC in Main Hall for evening events','Badge table blocked the entrance for first 15 min — move to side next time'],
+      actions:['Book AC check for Main Hall (Priya S., done)','Update room setup guide: badges on side table not front (Tom B., done)','Confirm repeat with Anthropic for Sep (Priya S., in progress)']
+    },
+    orgFeedback:{
+      rating:5, submitted:'06 Jun 2026', org:'Anthropic',
+      metExpectations:'Yes — fully',
+      better:'Nothing specific — it ran smoothly',
+      again:'Yes, definitely',
+      comments:'Really well organised. The pre-talk reception was a great touch — our speaker had time to meet attendees before going on. Would love to make this a quarterly series.'
+    },
+    attendeeFeedback:{
+      responseRate:'68%', avgContent:4.8, avgVenue:4.6, wouldReturn:'94%',
+      quotes:[
+        {t:'The talk was genuinely the best technical AI safety content I\'ve seen outside a conference. Well pitched for a mixed audience.',s:'positive'},
+        {t:'Really impressive turn-out. Great to see so many people in the London safety community in one room.',s:'positive'},
+        {t:'Room was a bit warm in the second half but that\'s a minor thing.',s:'negative'},
+        {t:'The Q&A format worked really well — moderator kept it tight.',s:'positive'},
+      ]
+    },
+    surveyBase:'lisa-2026-0041-anthropic-interp',
+    cap: 80,
+    attendeeList:[
+      {id:'p001',name:'Yasmin Al-Rashid',org:'UK AISI',email:'y.alrashid@aisi.gov.uk',rsvp:'confirmed',checkedIn:true,diet:'Vegan',access:''},
+      {id:'p002',name:'Tom Whitfield',org:'Redwood Research',email:'tom@redwoodresearch.org',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+      {id:'p003',name:'Clara Beaumont',org:'DeepMind',email:'c.beaumont@deepmind.com',rsvp:'confirmed',checkedIn:true,diet:'Gluten-free',access:''},
+      {id:'p004',name:'Leo Strauss',org:'Apollo Research',email:'leo@apolloresearch.ai',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+      {id:'p005',name:'Fatima Al-Amin',org:'Anthropic',email:'f.alamin@anthropic.com',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+      {id:'p006',name:'James Okafor',org:'GovAI',email:'j.okafor@governance.ai',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+      {id:'p007',name:'Nina Vasquez',org:'CAIS',email:'nina@safe.ai',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
+      {id:'p008',name:'Sophie Tremblay',org:'MIRI',email:'stremblay@intelligence.org',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+      {id:'p009',name:'Amir Hossein',org:'Oxford FHI',email:'amir.h@future.ox.ac.uk',rsvp:'confirmed',checkedIn:true,diet:'Halal',access:''},
+      {id:'p010',name:'Marcus Holt',org:'UCL',email:'m.holt@ucl.ac.uk',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+    ] {
+    ref:'LISA-2026-0038', title:'Women in AI Safety Social (Spring)', date:'15 May 2026',
+    time:'18:00–20:30', type:'Social Mixer', owner:'Lena K.', room:'Workshop Space',
+    org:'LISA-led', attendees:'48 / 50 cap', status:'complete', statusCol:'bg',
+    statusLabel:'Complete ✓',
+    description:'Spring social mixer for women working in AI safety. Self-serve drinks bar, cheese and charcuterie. Co-promoted with EA London and Women in ML.',
+    checklistType:'social', checklistPct:100,
+    postmortem:{
+      pos:['Near full-house: 48/50','Co-promotion with Women in ML brought 12 first-time attendees','6pm start worked much better than previous 7pm events','Self-serve bar: smoother and more sociable than table service'],
+      neg:['Snacks ran low by 19:30 — buy for registered + 20% buffer next time','No LinkedIn post after the event — missed opportunity for visibility'],
+      actions:['Update catering guide: order for reg count + 20% (Lena K., done)','Add post-event LinkedIn to social mixer checklist (Ana V., done)']
+    },
+    orgFeedback: null,
+    attendeeFeedback:{
+      responseRate:'61%', avgContent:4.5, avgVenue:4.7, wouldReturn:'97%',
+      quotes:[
+        {t:'Finally a safety event that didn\'t feel like a lecture. Just great people and good conversation.',s:'positive'},
+        {t:'Really well organised. The drinks station meant you could move around easily.',s:'positive'},
+        {t:'Snacks ran out a bit early — but honestly a minor issue in an otherwise great evening.',s:'negative'},
+        {t:'Best women in AI event I\'ve been to in London. Please make it quarterly.',s:'positive'},
+      ]
+    },
+    surveyBase:'lisa-2026-0038-women-spring',
+    cap: 50,
+    attendeeList:[
+      {id:'q001',name:'Lena Kovač',org:'LISA',email:'lena@londonaisafety.com',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+      {id:'q002',name:'Rachel Huang',org:'UK AISI',email:'r.huang@aisi.gov.uk',rsvp:'confirmed',checkedIn:true,diet:'Vegan',access:''},
+      {id:'q003',name:'Amara Diallo',org:'Anthropic',email:'amara@anthropic.com',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+      {id:'q004',name:'Mei Lin',org:'DeepMind',email:'mei.lin@deepmind.com',rsvp:'confirmed',checkedIn:false,diet:'',access:'Hearing loop required'},
+      {id:'q005',name:'Nadia Osei',org:'Independent',email:'nadia.osei@pm.me',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+      {id:'q006',name:'Sofia Reyes',org:'Oxford',email:'sofia.r@ox.ac.uk',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
+    ]
+
+function efTab(id, btn) {
+  document.querySelectorAll('.ef-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ef-section').forEach(s => s.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('ef-'+id).classList.add('active');
+  if(id === 'attendees') renderAttendees(efCurrentKey);
+}
+
+// ══════════════════════
+// ATTENDEES
+// ══════════════════════
+let attMode = 'list'; // 'list' | 'checkin'
+let attFilter = 'all';
+let attSearch = '';
+
+function renderAttendees(key) {
+  const ev = EF_DATA[key];
+  if (!ev) return;
+  const list = ev.attendeeList || [];
+  const isPast = ev.status === 'complete';
+  const regUrl = `https://lisa.events/register/${ev.surveyBase}`;
+
+  const confirmed = list.filter(a => a.rsvp === 'confirmed').length;
+  const waitlist  = list.filter(a => a.rsvp === 'waitlist').length;
+  const checkedIn = list.filter(a => a.checkedIn).length;
+  const dietary   = list.filter(a => a.diet).length;
+  const access    = list.filter(a => a.access);
+
+  // dietary summary
+  const dietCounts = {};
+  list.forEach(a => { if(a.diet) dietCounts[a.diet] = (dietCounts[a.diet]||0)+1; });
+  const dietSummary = Object.entries(dietCounts).map(([k,v])=>`${k}: ${v}`).join(' · ');
+
+  let html = `
+    <div class="reg-form-box">
+      <div>
+        <div class="reg-form-label">Public registration link</div>
+        <div class="reg-form-url">${regUrl}</div>
+        <div style="font-size:11px;color:var(--ink-light);margin-top:3px;">New registrations feed into this list automatically · Registration closes: ${ev.regClose||'3 days before event'}</div>
+      </div>
+      <button class="survey-copy-btn" onclick="copySurveyLink('${regUrl}',this)">Copy link</button>
+    </div>
+
+    <div class="att-stats">
+      <div class="att-stat"><div class="att-stat-val">${confirmed}</div><div class="att-stat-label">Confirmed</div></div>
+      <div class="att-stat"><div class="att-stat-val" style="color:var(--amber)">${waitlist}</div><div class="att-stat-label">Waitlist</div></div>
+      <div class="att-stat"><div class="att-stat-val" style="color:var(--green)">${isPast?checkedIn:'—'}</div><div class="att-stat-label">${isPast?'Attended':checkedIn>0?'Checked in':'Check-in on day'}</div></div>
+      <div class="att-stat"><div class="att-stat-val" style="color:var(--amber)">${dietary}</div><div class="att-stat-label">Dietary needs</div></div>
+    </div>
+
+    ${dietSummary ? `<div class="diet-summary">🍽 Dietary requirements: ${dietSummary}${access.length?` · ♿ Accessibility: ${access.map(a=>a.access).join('; ')}`:''}</div>` : ''}
+    ${access.length && !dietSummary ? `<div class="diet-summary" style="background:var(--purple-s);border-color:#c4b5fd;color:var(--purple);">♿ Accessibility: ${access.map(a=>a.name+': '+a.access).join(' · ')}</div>` : ''}
+
+    <div class="att-toolbar">
+      <input class="att-search" placeholder="Search name, org, email…" oninput="attSearchFilter(this.value,'${key}')" value="${attSearch}">
+      <select class="att-filter" onchange="attStatusFilter(this.value,'${key}')">
+        <option value="all">All attendees</option>
+        <option value="confirmed">Confirmed only</option>
+        <option value="waitlist">Waitlist</option>
+        ${isPast?'<option value="checkedin">Checked in</option><option value="absent">Did not attend</option>':''}
+        <option value="diet">Has dietary req.</option>
+        <option value="access">Has accessibility req.</option>
+      </select>
+      <div class="att-mode-toggle">
+        <button class="att-mode-btn ${attMode==='list'?'active':''}" onclick="setAttMode('list','${key}')">List</button>
+        <button class="att-mode-btn ${attMode==='checkin'?'active':''}" onclick="setAttMode('checkin','${key}')">Check-in</button>
+      </div>
+      <button class="btn btn-ghost btn-sm att-export" onclick="exportAttendees('${key}')">Export CSV</button>
+    </div>`;
+
+  // filter
+  let filtered = list.filter(a => {
+    const q = attSearch.toLowerCase();
+    const matchSearch = !q || a.name.toLowerCase().includes(q) || a.org.toLowerCase().includes(q) || a.email.toLowerCase().includes(q);
+    const matchFilter = attFilter==='all' ? true
+      : attFilter==='confirmed' ? a.rsvp==='confirmed'
+      : attFilter==='waitlist'  ? a.rsvp==='waitlist'
+      : attFilter==='checkedin' ? a.checkedIn
+      : attFilter==='absent'    ? (!a.checkedIn && a.rsvp==='confirmed')
+      : attFilter==='diet'      ? !!a.diet
+      : attFilter==='access'    ? !!a.access
+      : true;
+    return matchSearch && matchFilter;
+  });
+
+  if (!list.length) {
+    html += `<div class="card" style="text-align:center;padding:32px;color:var(--ink-light);">No attendees yet — registration opens when the event is confirmed.</div>`;
+  } else {
+    html += `<div class="card" style="padding:0;overflow:hidden;">
+      <table class="att-table">
+        <thead><tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Org</th>
+          <th>Email</th>
+          <th>RSVP</th>
+          <th>Requirements</th>
+          ${attMode==='checkin' ? '<th>Check-in</th>' : ''}
+        </tr></thead>
+        <tbody>`;
+
+    filtered.forEach((a, i) => {
+      const rsvpBadge = a.rsvp === 'confirmed'
+        ? `<span class="badge bg">Confirmed</span>`
+        : `<span class="badge ba">Waitlist</span>`;
+      const ciStatus = isPast
+        ? (a.checkedIn ? `<span class="badge bg">✓ Attended</span>` : `<span class="badge bk">Absent</span>`)
+        : `<button class="checkin-btn ${a.checkedIn?'in':'out'}" onclick="toggleCheckin('${key}','${a.id}',this)">${a.checkedIn?'✓ Checked in':'Mark arrived'}</button>`;
+      const reqs = [
+        a.diet ? `<span class="diet-flag">🍽 ${a.diet}</span>` : '',
+        a.access ? `<span class="access-flag">♿ ${a.access}</span>` : '',
+      ].filter(Boolean).join(' ');
+
+      html += `<tr>
+        <td class="mono small muted">${String(i+1).padStart(2,'0')}</td>
+        <td><div class="att-name">${a.name}</div></td>
+        <td><div class="att-org">${a.org}</div></td>
+        <td><div class="att-email">${a.email}</div></td>
+        <td>${rsvpBadge}</td>
+        <td>${reqs||'<span class="muted small">—</span>'}</td>
+        ${attMode==='checkin' ? `<td>${ciStatus}</td>` : ''}
+      </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    if (filtered.length < list.length) {
+      html += `<div style="font-size:12px;color:var(--ink-light);padding:8px 4px;">Showing ${filtered.length} of ${list.length} attendees</div>`;
+    }
+  }
+
+  document.getElementById('ef-attendees').innerHTML = html;
+}
+
+function toggleCheckin(key, attId, btn) {
+  const ev = EF_DATA[key];
+  if (!ev) return;
+  const att = ev.attendeeList.find(a => a.id === attId);
+  if (!att) return;
+  att.checkedIn = !att.checkedIn;
+  btn.className = `checkin-btn ${att.checkedIn?'in':'out'}`;
+  btn.textContent = att.checkedIn ? '✓ Checked in' : 'Mark arrived';
+  // update stat counter
+  const statEl = document.querySelector('.att-stat-val[data-ci]');
+  if (statEl) {
+    const total = (EF_DATA[key].attendeeList||[]).filter(a=>a.checkedIn).length;
+    statEl.textContent = total;
+  }
+}
+
+function setAttMode(mode, key) {
+  attMode = mode;
+  renderAttendees(key);
+}
+
+function attSearchFilter(val, key) {
+  attSearch = val;
+  renderAttendees(key);
+}
+
+function attStatusFilter(val, key) {
+  attFilter = val;
+  renderAttendees(key);
+}
+
+function exportAttendees(key) {
+  const ev = EF_DATA[key];
+  if (!ev || !ev.attendeeList) return;
+  const rows = [['Name','Org','Email','RSVP','Checked in','Dietary','Accessibility']];
+  ev.attendeeList.forEach(a => rows.push([a.name,a.org,a.email,a.rsvp,a.checkedIn?'Yes':'No',a.diet||'',a.access||'']));
+  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = `${ev.ref}-attendees.csv`; link.click();
+  URL.revokeObjectURL(url);
+}
+let efCurrentKey = 'mech';
+
+const EF_INDEX = [
+  { key:'mech',  ref:'LISA-2026-0044', title:'Mechanistic Interpretability Talk',      date:'02 Jul 2026', status:'Upcoming' },
+  { key:'women', ref:'LISA-2026-0045', title:'Women in AI Safety Social',              date:'07 Jul 2026', status:'Upcoming' },
+  { key:'govRG', ref:'LISA-2026-0046', title:'AI Governance Reading Group',            date:'10 Jul 2026', status:'⚠ No owner' },
+  { key:'hack',  ref:'LISA-2026-0047', title:'Governance Hackathon',                   date:'18 Jul 2026', status:'Under review' },
+  { key:'past1', ref:'LISA-2026-0041', title:'Anthropic Interpretability Deep Dive',   date:'04 Jun 2026', status:'Complete ✓' },
+  { key:'past2', ref:'LISA-2026-0038', title:'Women in AI Safety Social (Spring)',     date:'15 May 2026', status:'Complete ✓' },
+];
+
+function efSearch(val) {
+  const results = document.getElementById('ef-results');
+  const noResult = document.getElementById('ef-no-result');
+  const q = val.trim().toLowerCase();
+  if (!q) { results.style.display='none'; noResult.style.display='none'; return; }
+  const matches = EF_INDEX.filter(e =>
+    e.ref.toLowerCase().includes(q) ||
+    e.title.toLowerCase().includes(q) ||
+    e.date.toLowerCase().includes(q) ||
+    e.status.toLowerCase().includes(q)
+  );
+  if (!matches.length) {
+    results.style.display = 'none';
+    noResult.style.display = 'block';
+    return;
+  }
+  noResult.style.display = 'none';
+  results.innerHTML = matches.map((e,i) => `
+    <div class="ef-result-row" data-key="${e.key}" onclick="selectEvent('${e.key}')" style="
+      display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;
+      border-bottom:${i<matches.length-1?'1px solid var(--border)':'none'};
+      transition:background .12s;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent);flex-shrink:0;width:110px;">${e.ref}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.title}</div>
+        <div style="font-size:11px;color:var(--ink-light);">${e.date}</div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-mid);flex-shrink:0;">${e.status}</div>
+    </div>`).join('');
+  results.style.display = 'block';
+  // hover effect
+  results.querySelectorAll('.ef-result-row').forEach(r => {
+    r.addEventListener('mouseenter', () => r.style.background='var(--accent-soft)');
+    r.addEventListener('mouseleave', () => r.style.background='');
+  });
+}
+
+function efSearchKey(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('ef-results').style.display='none';
+    document.getElementById('ef-no-result').style.display='none';
+  }
+  if (e.key === 'Enter') {
+    const first = document.getElementById('ef-results').querySelector('.ef-result-row');
+    if (first) selectEvent(first.dataset.key);
+  }
+}
+
+function selectEvent(key) {
+  efCurrentKey = key;
+  const ev = EF_INDEX.find(e => e.key === key);
+  if (ev) {
+    const input = document.getElementById('ef-search');
+    if (input) { input.value = ev.ref + ' · ' + ev.title; }
+  }
+  document.getElementById('ef-results').style.display = 'none';
+  document.getElementById('ef-no-result').style.display = 'none';
+  loadEventFile(key);
+}
+
+// close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ef-search-wrap')) {
+    const r = document.getElementById('ef-results');
+    if (r) r.style.display = 'none';
+  }
+});
+
+function loadEventFile(key) {
+  if (!key) key = efCurrentKey;
+  efCurrentKey = key;
+  const ev = EF_DATA[key];
+  if(!ev) return;
+
+  // ── HEADER ──
+  const statusColors = {bg:'background:var(--green-s);color:var(--green)', ba:'background:var(--amber-s);color:var(--amber)', br:'background:var(--red-s);color:var(--red)'};
+  document.getElementById('ef-header-area').innerHTML = `<div class="ef-header">
+    <div>
+      <div class="ef-ref">${ev.ref}</div>
+      <div class="ef-title">${ev.title}</div>
+      <div class="ef-meta">
+        <div class="ef-meta-item">📅 ${ev.date}</div>
+        <div class="ef-meta-item">⏰ ${ev.time}</div>
+        <div class="ef-meta-item">🏛 ${ev.room}</div>
+        <div class="ef-meta-item">👤 ${ev.owner}</div>
+        <div class="ef-meta-item">🏢 ${ev.org}</div>
+        <div class="ef-meta-item">🎟 ${ev.attendees}</div>
+      </div>
+    </div>
+    <div class="ef-status-pill" style="${statusColors[ev.statusCol]||''}">${ev.statusLabel}</div>
+  </div>`;
+
+  // ── OVERVIEW ──
+  document.getElementById('ef-overview').innerHTML = `
+    <div class="card"><div class="card-title">About this event</div><p style="font-size:13px;color:var(--ink-mid);line-height:1.65;">${ev.description}</p></div>
+    <div class="card"><div class="card-title">Quick stats</div>
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card"><div class="stat-label">Type</div><div style="font-size:14px;font-weight:600;">${ev.type}</div></div>
+        <div class="stat-card"><div class="stat-label">Attendance</div><div style="font-size:14px;font-weight:600;">${ev.attendees}</div></div>
+        <div class="stat-card"><div class="stat-label">Status</div><div style="font-size:14px;font-weight:600;">${ev.statusLabel}</div></div>
+      </div>
+    </div>`;
+
+  // ── CHECKLIST WITH ON-TIME STATUS ──
+  const tasks = TASKS[ev.checklistType] || TASKS.speaker;
+  const allItems = tasks.flatMap(p => p.items);
+  const doneCount = Math.round((ev.checklistPct / 100) * allItems.length);
+  if (!clState[ev.title]) {
+    clState[ev.title] = {};
+    allItems.forEach((it, i) => clState[ev.title][it.t] = i < doneCount);
+  }
+
+  // Parse event date to get days-until
+  const evDateParts = ev.date.match(/(\d+)\s+(\w+)\s+(\d+)/);
+  const MONTHS = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const evDate = evDateParts ? new Date(+evDateParts[3], MONTHS[evDateParts[2]]||6, +evDateParts[1]) : new Date('2026-07-02');
+  const today = new Date('2026-06-26'); // system date
+  const daysUntil = Math.round((evDate - today) / 86400000);
+
+  // Map phase label → days before event when tasks should be done
+  const PHASE_DEADLINES = {
+    '3+ weeks before': 21, '2+ weeks before': 14, '2 weeks before': 14,
+    '4+ weeks before': 28, '4 weeks before': 28, '3 weeks before': 21,
+    '1 week before': 7, 'Registration close (–3 days)': 3, '1 week before ': 7,
+    'Day before': 1, 'Day of event': 0, 'Day of': 0, 'Day of event ': 0,
+    'After the event': -1, 'After the session': -1, 'After': -1,
+  };
+
+  // Compute per-task timing status
+  function taskStatus(phaseName, done) {
+    if (done) return { label:'Done', cls:'ts-done', icon:'✓' };
+    const deadlineDaysOut = PHASE_DEADLINES[phaseName];
+    if (deadlineDaysOut === undefined) return { label:'—', cls:'ts-na', icon:'·' };
+    const shouldHaveBeenDoneBy = daysUntil - deadlineDaysOut; // negative = overdue
+    if (ev.status === 'complete') return { label:'Past event', cls:'ts-na', icon:'·' };
+    if (daysUntil < 0) return { label:'Event passed', cls:'ts-na', icon:'·' };
+    if (deadlineDaysOut < 0) return { label:'After event', cls:'ts-future', icon:'○' }; // after event tasks
+    if (shouldHaveBeenDoneBy > 0) return { label:'Not yet due', cls:'ts-future', icon:'○' };
+    if (shouldHaveBeenDoneBy > -3) return { label:'Due now', cls:'ts-soon', icon:'!' };
+    return { label:'Overdue', cls:'ts-over', icon:'✗' };
+  }
+
+  // Summary counts
+  let nDone=0, nOver=0, nSoon=0, nFuture=0;
+  tasks.forEach(ph => ph.items.forEach(it => {
+    const s = taskStatus(ph.phase, clState[ev.title][it.t]);
+    if(s.cls==='ts-done') nDone++;
+    else if(s.cls==='ts-over') nOver++;
+    else if(s.cls==='ts-soon') nSoon++;
+    else nFuture++;
+  }));
+
+  const overallRag = nOver > 0 ? 'red' : nSoon > 0 ? 'amber' : 'green';
+  const ragMsg = {
+    red:`⚠ ${nOver} task${nOver>1?'s are':' is'} overdue — action needed`,
+    amber:`${nSoon} task${nSoon>1?'s':''} due now — check before end of day`,
+    green: daysUntil < 0 ? 'Event complete' : `On track — next tasks due in ${Math.max(0,daysUntil-7)} days`
+  }[overallRag];
+  const ragStyle = {red:'background:var(--red-s);border:1px solid #fca5a5;color:var(--red)',amber:'background:var(--amber-s);border:1px solid #fcd34d;color:var(--amber)',green:'background:var(--green-s);border:1px solid #86efac;color:var(--green)'}[overallRag];
+
+  let clHtml = `<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="card-title" style="margin-bottom:0;">Task checklist</div>
+      <div style="display:flex;gap:10px;font-size:11px;">
+        <span style="color:var(--green)">✓ ${nDone} done</span>
+        ${nOver?`<span style="color:var(--red)">✗ ${nOver} overdue</span>`:''}
+        ${nSoon?`<span style="color:var(--amber)">! ${nSoon} due now</span>`:''}
+        <span style="color:var(--ink-light)">○ ${nFuture} upcoming</span>
+      </div>
+    </div>
+    <div style="${ragStyle};border-radius:5px;padding:9px 14px;font-size:13px;font-weight:500;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+      ${ragMsg}
+      <span style="margin-left:auto;font-family:var(--mono);font-size:11px;opacity:.7;">${daysUntil>=0?`T–${daysUntil} days`:'Past event'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:0;font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;padding:0 10px 6px;border-bottom:1px solid var(--border);">
+      <div>Task</div><div style="text-align:right;">Status</div>
+    </div>`;
+
+  tasks.forEach(phase => {
+    clHtml += `<div class="cl-phase">${phase.phase}</div>`;
+    phase.items.forEach(item => {
+      const done = clState[ev.title][item.t];
+      const st = taskStatus(phase.phase, done);
+      const rowStyle = st.cls==='ts-over' ? 'background:var(--red-s);' : st.cls==='ts-soon' ? 'background:var(--amber-s);' : '';
+      const statusStyle = {
+        'ts-done':  'color:var(--green);font-weight:600;',
+        'ts-over':  'color:var(--red);font-weight:700;',
+        'ts-soon':  'color:var(--amber);font-weight:700;',
+        'ts-future':'color:var(--ink-light);',
+        'ts-na':    'color:var(--ink-light);',
+      }[st.cls]||'';
+      const safeTitle = item.t.replace(/'/g,"\\'");
+      clHtml += `<label class="cl-item${done?' done':''}" style="${rowStyle}">
+        <input type="checkbox" ${done?'checked':''} onchange="toggleEfCheck('${ev.title}','${safeTitle}',this)" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;margin-top:2px;cursor:pointer;">
+        <div class="cl-item-meta" style="flex:1;">${item.t}${item.approval?`<span class="cl-approval">⚠ ${item.ap}</span>`:''}</div>
+        <div style="font-size:11px;${statusStyle};white-space:nowrap;padding-left:10px;">${st.icon} ${st.label}</div>
+      </label>`;
+    });
+  });
+  clHtml += '</div>';
+  document.getElementById('ef-checklist').innerHTML = clHtml;
+
+  // ── ATTENDEES ──
+  attSearch = ''; attFilter = 'all';
+  renderAttendees(key);
+  const pm = ev.postmortem;
+  const noData = pm.pos.length === 0 && pm.neg.length === 0;
+  document.getElementById('ef-postmortem').innerHTML = noData
+    ? `<div class="card"><div class="card-title">LISA Post-mortem</div><div class="small muted">Not yet completed. <button class="btn btn-primary btn-sm" style="margin-left:10px;" onclick="go('feedback',null)">Fill in debrief →</button></div></div>`
+    : `<div class="pm-grid">
+      <div class="pm-card pos"><div class="pm-card-title">✓ What worked well</div>${pm.pos.map(p=>`<div class="pm-item"><div class="pm-bullet"></div><div style="font-size:12px;">${p}</div></div>`).join('') || '<div class="small muted">None logged yet.</div>'}</div>
+      <div class="pm-card neg"><div class="pm-card-title">✗ What to improve</div>${pm.neg.map(n=>`<div class="pm-item"><div class="pm-bullet"></div><div style="font-size:12px;">${n}</div></div>`).join('') || '<div class="small muted">None logged yet.</div>'}</div>
+      <div class="pm-card action"><div class="pm-card-title">→ Actions</div>${pm.actions.map(a=>`<div class="pm-item"><div class="pm-bullet"></div><div style="font-size:12px;">${a}</div></div>`).join('')}</div>
+    </div>`;
+
+  // ── ORG FEEDBACK ──
+  const of = ev.orgFeedback;
+  document.getElementById('ef-orgfeedback').innerHTML = !of
+    ? `<div class="card"><div class="card-title">Organisation feedback</div>
+        <div class="small muted" style="margin-bottom:14px;">No response yet. Send the org feedback form:</div>
+        ${renderSurveyLink('Organisation feedback form', `https://lisa.events/feedback/org/${ev.surveyBase}`, false)}
+      </div>`
+    : `<div class="card"><div class="card-title">Organisation feedback — submitted ${of.submitted}</div>
+        <div class="feedback-block">
+          <div class="feedback-block-title"><span>${of.org}</span><span class="stars">${'★'.repeat(of.rating)}${'☆'.repeat(5-of.rating)}</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div><div style="font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Met expectations?</div><div style="font-size:13px;">${of.metExpectations}</div></div>
+            <div><div style="font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Would use LISA again?</div><div style="font-size:13px;">${of.again}</div></div>
+          </div>
+          ${of.better!=='Nothing specific — it ran smoothly'?`<div style="font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">What could be better?</div><div class="feedback-quote negative">${of.better}</div>`:''}
+          <div style="font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Additional comments</div>
+          <div class="feedback-quote positive">${of.comments}</div>
+        </div>
+      </div>`;
+
+  // ── ATTENDEE FEEDBACK ──
+  const af = ev.attendeeFeedback;
+  document.getElementById('ef-attendeefeedback').innerHTML = !af
+    ? `<div class="card"><div class="card-title">Attendee feedback</div>
+        <div class="small muted" style="margin-bottom:14px;">No responses yet. Share the attendee survey link or QR code after the event:</div>
+        ${renderSurveyLink('Attendee feedback survey', `https://lisa.events/feedback/attendee/${ev.surveyBase}`, true)}
+      </div>`
+    : `<div class="card"><div class="card-title">Attendee feedback — ${af.responseRate} response rate</div>
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+          <div class="stat-card"><div class="stat-label">Content rating</div><div class="stat-val">${af.avgContent}<span style="font-size:14px;color:var(--ink-light);">/5</span></div></div>
+          <div class="stat-card"><div class="stat-label">Venue / logistics</div><div class="stat-val">${af.avgVenue}<span style="font-size:14px;color:var(--ink-light);">/5</span></div></div>
+          <div class="stat-card"><div class="stat-label">Would return</div><div class="stat-val" style="color:var(--green)">${af.wouldReturn}</div></div>
+        </div>
+        <div class="card-title">Selected comments</div>
+        ${af.quotes.map(q=>`<div class="feedback-quote ${q.s}">"${q.t}"</div>`).join('')}
+      </div>`;
+
+  // ── SURVEYS ──
+  document.getElementById('ef-surveys').innerHTML = `
+    <div class="card"><div class="card-title">Survey links — ${ev.ref}</div>
+      <div class="info" style="margin-bottom:16px;">These links are unique to this event. Copy and paste into your report, email, or post-event comms. The QR code is for the attendee survey — print and display at the event.</div>
+      ${renderSurveyLink('Attendee feedback survey (QR + link)', `https://lisa.events/feedback/attendee/${ev.surveyBase}`, true)}
+      ${renderSurveyLink('Organisation / host feedback form', `https://lisa.events/feedback/org/${ev.surveyBase}`, false)}
+      ${renderSurveyLink('LISA internal debrief form', `https://lisa.events/debrief/internal/${ev.surveyBase}`, false)}
+      ${renderSurveyLink('Post-event report (read-only summary)', `https://lisa.events/report/${ev.surveyBase}`, false)}
+    </div>`;
+}
+
+function renderSurveyLink(label, url, showQr) {
+  return `<div class="survey-link-box">
+    ${showQr ? `<div class="qr-placeholder">QR<br>${url.split('/').pop().slice(0,12)}</div>` : ''}
+    <div style="flex:1;min-width:0;">
+      <div class="survey-link-label">${label}</div>
+      <div class="survey-link-url">${url}</div>
+    </div>
+    <button class="survey-copy-btn" onclick="copySurveyLink('${url}',this)">Copy link</button>
+  </div>`;
+}
+
+function copySurveyLink(url, btn) {
+  navigator.clipboard?.writeText(url).then(() => {
+    btn.textContent = 'Copied ✓';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#fff';
+    setTimeout(() => { btn.textContent = 'Copy link'; btn.style.background=''; btn.style.color=''; }, 2000);
+  }).catch(() => { prompt('Copy this link:', url); });
+}
+
+function toggleEfCheck(eventTitle, taskName, cb) {
+  if (!clState[eventTitle]) clState[eventTitle] = {};
+  clState[eventTitle][taskName] = cb.checked;
+  const row = cb.closest('.cl-item');
+  if (row) row.className = 'cl-item' + (cb.checked ? ' done' : '');
+}
+
+// ══════════════════════
+// INIT
+// ══════════════════════
+renderCal();
+renderRooms();
+renderTeam();
+renderBudget();
+renderStories();
+renderDigest();
+initKanbanPicker();
+showBible('speaker', null);
+renderRetro();
+loadEventFile();
+</script>
+</body>
+</html>
