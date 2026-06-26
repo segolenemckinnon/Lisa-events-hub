@@ -2190,7 +2190,9 @@ const EF_DATA = {
       {id:'a010',name:'Marcus Holt',org:'UCL',email:'m.holt@ucl.ac.uk',rsvp:'waitlist',checkedIn:false,diet:'Vegan',access:''},
       {id:'a011',name:'Fatima Al-Amin',org:'Anthropic',email:'f.alamin@anthropic.com',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
       {id:'a012',name:'Daniel Park',org:'LSE',email:'d.park@lse.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
-    ] {
+    ]
+  },
+  women: {
     ref:'LISA-2026-0045', title:'Women in AI Safety Social', date:'07 Jul 2026',
     time:'18:00–20:00', type:'Social Mixer', owner:'Lena K.', room:'Workshop Space',
     org:'LISA-led', attendees:'28 registered / 50 cap', status:'upcoming', statusCol:'ba',
@@ -2215,7 +2217,9 @@ const EF_DATA = {
       {id:'b006',name:'Nadia Osei',org:'Independent',email:'nadia.osei@pm.me',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
       {id:'b007',name:'Priya Sharma',org:'LSE',email:'p.sharma@lse.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'Halal',access:''},
       {id:'b008',name:'Sofia Reyes',org:'Oxford',email:'sofia.r@ox.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
-    ] {
+    ]
+  },
+  govRG: {
     ref:'LISA-2026-0046', title:'AI Governance Reading Group', date:'10 Jul 2026',
     time:'17:30–19:00', type:'Reading Group', owner:'⚠ Unassigned', room:'Seminar Room B',
     org:'LISA-led', attendees:'12 registered / 20 cap', status:'atrisk', statusCol:'br',
@@ -2235,7 +2239,9 @@ const EF_DATA = {
       {id:'c001',name:'Tom Bauer',org:'LISA',email:'tom@londonaisafety.com',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
       {id:'c002',name:'Alice Ng',org:'GovAI',email:'a.ng@governance.ai',rsvp:'confirmed',checkedIn:false,diet:'Vegan',access:''},
       {id:'c003',name:'Raj Patel',org:'Oxford',email:'raj.p@ox.ac.uk',rsvp:'confirmed',checkedIn:false,diet:'',access:''},
-    ] {
+    ]
+  },
+  hack: {
     ref:'LISA-2026-0047', title:'Governance Hackathon', date:'18 Jul 2026',
     time:'09:00–18:00', type:'Workshop / Hackathon', owner:'Pending', room:'Main Hall (full day)',
     org:'DeepMind / External', attendees:'0 registered / 40 cap', status:'reviewing', statusCol:'ba',
@@ -2247,7 +2253,9 @@ const EF_DATA = {
     attendeeFeedback: null,
     surveyBase:'lisa-2026-0047-gov-hack',
     cap: 40,
-    attendeeList:[] {
+    attendeeList:[]
+  },
+  past1: {
     ref:'LISA-2026-0041', title:'Anthropic Interpretability Deep Dive', date:'04 Jun 2026',
     time:'18:30–21:00', type:'Speaker / Talk', owner:'Priya S.', room:'Main Hall',
     org:'Anthropic', attendees:'72 / 80 cap', status:'complete', statusCol:'bg',
@@ -2288,7 +2296,9 @@ const EF_DATA = {
       {id:'p008',name:'Sophie Tremblay',org:'MIRI',email:'stremblay@intelligence.org',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
       {id:'p009',name:'Amir Hossein',org:'Oxford FHI',email:'amir.h@future.ox.ac.uk',rsvp:'confirmed',checkedIn:true,diet:'Halal',access:''},
       {id:'p010',name:'Marcus Holt',org:'UCL',email:'m.holt@ucl.ac.uk',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
-    ] {
+    ]
+  },
+  past2: {
     ref:'LISA-2026-0038', title:'Women in AI Safety Social (Spring)', date:'15 May 2026',
     time:'18:00–20:30', type:'Social Mixer', owner:'Lena K.', room:'Workshop Space',
     org:'LISA-led', attendees:'48 / 50 cap', status:'complete', statusCol:'bg',
@@ -2320,6 +2330,8 @@ const EF_DATA = {
       {id:'q005',name:'Nadia Osei',org:'Independent',email:'nadia.osei@pm.me',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
       {id:'q006',name:'Sofia Reyes',org:'Oxford',email:'sofia.r@ox.ac.uk',rsvp:'confirmed',checkedIn:true,diet:'',access:''},
     ]
+  }
+};
 
 function efTab(id, btn) {
   document.querySelectorAll('.ef-tab').forEach(t => t.classList.remove('active'));
